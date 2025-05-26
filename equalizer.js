@@ -14,9 +14,9 @@ Equalizer = (function() {
         // Avoid filters close to nyquist frequency by default, because the behavior is implementation dependent
         // https://github.com/jaakkopasanen/AutoEq/issues/240
         // https://github.com/jaakkopasanen/AutoEq/issues/411
-        AutoEQRange: [20, 15000],
+        AutoEQRange: [20, 20000],
         // Minimum and maximum Q for AutoEQ feature
-        OptimizeQRange: [0.5, 2],
+        OptimizeQRange: [0.1, 2],
         // Minimum and maximum Gain for AutoEQ feature
         OptimizeGainRange: [-12, 12],
         // Delta and step of Freq, Q and Gain used for AutoEQ optimizing
@@ -360,9 +360,18 @@ Equalizer = (function() {
         }
     };
 
-    let autoeq = function (fr, frTarget, maxFilters) {
+    let autoeq = function (fr, frTarget, maxFilters, options) {
         // 2 steps manual optimized algorithm
         // fr, frTarget should has same resolution and normalized
+        // Nếu có options thì cập nhật config tạm thời
+        let oldAutoEQRange = config.AutoEQRange.slice();
+        let oldQRange = config.OptimizeQRange.slice();
+        let oldGainRange = config.OptimizeGainRange.slice();
+        if (options) {
+            if (options.freqRange) config.AutoEQRange = options.freqRange.slice();
+            if (options.qRange) config.OptimizeQRange = options.qRange.slice();
+            if (options.gainRange) config.OptimizeGainRange = options.gainRange.slice();
+        }
         let firstBatchSize = Math.max(Math.floor(maxFilters / 2) - 1, 1);
         let firstCandidates = search_candidates(fr, frTarget, 1);
         let firstFilters = (firstCandidates
@@ -388,6 +397,12 @@ Equalizer = (function() {
         let allFilters = firstFilters.concat(secondFilters);
         for (let i = 0; i < config.OptimizeDeltas.length; ++i) {
             allFilters = optimize(fr, frTarget, allFilters, i);
+        }
+        // Khôi phục config cũ sau khi chạy xong
+        if (options) {
+            config.AutoEQRange = oldAutoEQRange;
+            config.OptimizeQRange = oldQRange;
+            config.OptimizeGainRange = oldGainRange;
         }
         return strip(allFilters);
     };

@@ -167,7 +167,7 @@ doc.html(`
                 </div>
               </div>
               <div class="settings-row">
-                <span>AutoEQ Range</span>
+                <span>Frequency Range</span>
                 <span><input name="autoeq-from" type="number" min="20" max="20000" step="1" value="20"></input></span>
                 <span><input name="autoeq-to" type="number" min="20" max="20000" step="1" value="20000"></input></span>
               </div>
@@ -180,7 +180,11 @@ doc.html(`
               <div class="settings-row">
                 <span>Q Range</span>
                 <span><input name="autoeq-q-from" type="number" min="0.1" max="20" step="0.1" value="0.1"></input></span>
-                <span><input name="autoeq-q-to" type="number" min="0.1" max="20" step="0.1" value="20.0"></input></span>
+                <span><input name="autoeq-q-to" type="number" min="0.1" max="20" step="0.1" value="2.0"></input></span>
+              </div>
+              <div class="settings-row">
+                <span>Pre-amp</span>
+                <span id="preamp-value">0.0 dB</span>
               </div>
               <div class="filters-button">
                 <button class="add-filter">＋</button>
@@ -2440,6 +2444,11 @@ function addExtra() {
         phoneObj.eq = phoneObjEQ;
         phoneObjEQ.eqParent = phoneObj;
         showPhone(phoneObjEQ, false);
+        // Cập nhật giá trị pre-amp
+        let preamp = Equalizer.calc_preamp(
+            phoneObj.rawChannels.filter(c => c)[0],
+            phoneObjEQ.rawChannels.filter(c => c)[0]);
+        document.getElementById("preamp-value").textContent = preamp.toFixed(1) + " dB";
         activeElem.focus();
     };
     let applyEQ = () => {
@@ -2620,7 +2629,7 @@ function addExtra() {
             let autoEQGainFrom = parseFloat(autoEQGainFromInput.value) || -12;
             let autoEQGainTo = parseFloat(autoEQGainToInput.value) || 12;
             let autoEQQFrom = parseFloat(autoEQQFromInput.value) || 0.1;
-            let autoEQQTo = parseFloat(autoEQQToInput.value) || 20.0;
+            let autoEQQTo = parseFloat(autoEQQToInput.value) || 2.0;
             let phoneCHs = (phoneObj.rawChannels.filter(c => c)
                 .map(ch => ch.map(([f, v]) => [f, v + phoneObj.norm])));
             let phoneCH = (phoneCHs.length > 1) ? avgCurves(phoneCHs) : phoneCHs[0];
