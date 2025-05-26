@@ -1,0 +1,34 @@
+[
+    {
+      "name": "Moondrop",
+      "phones": [
+        {"name":"Alice"},
+        {"name":"Aria"},
+        {"name":"Aria 2"},
+        {"name":"Aria: Snow Edition", "file":["Aria Snow Edition"]},
+        {"name":"Blessing 2"},
+        {"name":"Blessing 3"},
+        {"name":"Chu"},
+        {"name":"Chu II"},
+        {"name":"Harmon"},
+        {"name":"Kato", "file":["Kato", "Kato Blue"]},
+        {"name":"KXXS"},
+        {"name":"Lan"},
+        {"name":"May"},
+        {"name":"Robin", "file":["Robin (ANC)"]},
+        {"name":"Space Travel", "file":["Space Travel (Reference)"]},
+        {"name":"Variations"}
+      ]
+    },
+    {
+      "name": "TruthEars",
+      "phones": [
+        {"name":"Gate"},
+        {"name":"Hexa"},
+        {"name":"Hola"},
+        {"name":"Nova"},
+        {"name":"Zero"},
+        {"name":"Zero: BLUE 2","file":["Zero Blue"]}
+      ]
+    }
+]
