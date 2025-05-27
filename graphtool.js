@@ -2444,7 +2444,7 @@ function addExtra() {
         phoneObj.eq = phoneObjEQ;
         phoneObjEQ.eqParent = phoneObj;
         showPhone(phoneObjEQ, false);
-        // Cập nhật giá trị pre-amp
+        // Update pre-amp value
         let preamp = Equalizer.calc_preamp(
             phoneObj.rawChannels.filter(c => c)[0],
             phoneObjEQ.rawChannels.filter(c => c)[0]);
@@ -2595,7 +2595,7 @@ function addExtra() {
     // AutoEQ
     let autoEQFromInput = document.querySelector("div.extra-eq input[name='autoeq-from']");
     let autoEQToInput = document.querySelector("div.extra-eq input[name='autoeq-to']");
-    // Thêm các input mới cho Gain Range và Q Range
+    // Add new input for Gain Range and Q Range
     let autoEQGainFromInput = document.querySelector("div.extra-eq input[name='autoeq-gain-from']");
     let autoEQGainToInput = document.querySelector("div.extra-eq input[name='autoeq-gain-to']");
     let autoEQQFromInput = document.querySelector("div.extra-eq input[name='autoeq-q-from']");
@@ -2634,7 +2634,7 @@ function addExtra() {
                 .map(ch => ch.map(([f, v]) => [f, v + phoneObj.norm])));
             let phoneCH = (phoneCHs.length > 1) ? avgCurves(phoneCHs) : phoneCHs[0];
             let targetCH = targetObj.rawChannels.filter(c => c)[0].map(([f, v]) => [f, v + targetObj.norm]);
-            // Truyền thêm các tham số vào hàm autoeq
+            // Pass additional parameters to autoeq function
             let filters = Equalizer.autoeq(phoneCH, targetCH, eqBands, {
                 freqRange: [autoEQFrom, autoEQTo],
                 gainRange: [autoEQGainFrom, autoEQGainTo],

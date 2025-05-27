@@ -1,5 +1,5 @@
 // Configuration options
-const init_phones = ["Advar"],                      // Optional. Which graphs to display on initial load. Note: Share URLs will override this set
+const init_phones = [""],                      // Optional. Which graphs to display on initial load. Note: Share URLs will override this set
       DIR = "data_shiori/",                         // Directory where graph files are stored
       default_channels = ["L","R"],                 // Which channels to display. Avoid javascript errors if loading just one channel per phone
       default_normalization = "dB",                 // Sets default graph normalization mode. Accepts "dB" or "Hz"

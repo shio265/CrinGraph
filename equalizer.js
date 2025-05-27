@@ -363,7 +363,7 @@ Equalizer = (function() {
     let autoeq = function (fr, frTarget, maxFilters, options) {
         // 2 steps manual optimized algorithm
         // fr, frTarget should has same resolution and normalized
-        // Nếu có options thì cập nhật config tạm thời
+        // If options is provided, update config temporarily
         let oldAutoEQRange = config.AutoEQRange.slice();
         let oldQRange = config.OptimizeQRange.slice();
         let oldGainRange = config.OptimizeGainRange.slice();
@@ -398,7 +398,7 @@ Equalizer = (function() {
         for (let i = 0; i < config.OptimizeDeltas.length; ++i) {
             allFilters = optimize(fr, frTarget, allFilters, i);
         }
-        // Khôi phục config cũ sau khi chạy xong
+        // Restore original config after running
         if (options) {
             config.AutoEQRange = oldAutoEQRange;
             config.OptimizeQRange = oldQRange;
