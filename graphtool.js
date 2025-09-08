@@ -190,14 +190,56 @@ doc.html(`
                 <button class="add-filter">＋</button>
                 <button class="remove-filter">－</button>
                 <button class="sort-filters">Sort</button>
+                <button class="autoeq">AutoEQ</button>
                 <button class="import-filters">Import</button>
                 <button class="export-filters">Export</button>
-                <button class="autoeq">AutoEQ</button>
-                <button class="export-graphic-filters">Export Graphic EQ (For Wavelet)</button>
+                <button class="export-poweramp">Export Poweramp</button>
+                <button class="export-graphic-filters">Export Wavelet</button>
                 <button class="readme">Guide</button>
               </div>
               <a style="display: none" id="file-filters-export"></a>
               <form style="display:none"><input type="file" id="file-filters-import" accept=".txt" /></form>
+            </div>
+            <div class="extra-audio-preview">
+              <h5>Audio Preview</h5>
+              <div class="audio-upload-section">
+                <button class="upload-audio">Upload Audio File</button>
+                </br>
+                <span><small>Upload an audio file to preview EQ effects in real-time</small></span>
+                <form style="display:none"><input type="file" id="file-audio" accept=".mp3,.wav,.flac,.ogg,.m4a" /></form>
+              </div>
+              <div class="audio-player-section" style="display:none">
+                <div class="audio-file-info">
+                  <span>File: <span id="audio-filename">No file selected</span></span>
+                </div>
+                <div class="audio-controls">
+                  <button id="play-toggle">Play</button>
+                  <button id="stop-audio">Stop</button>
+                  <button id="enable-all-eq">Enable All EQ</button>
+                  <button id="disable-all-eq">Disable All EQ</button>
+                  <button id="remove-audio">Remove Audio</button>
+                </div>
+                <div class="audio-volume">
+                  <span>Volume: </span>
+                  <input type="range" id="audio-volume" min="0" max="1" step="0.01" value="0.5" />
+                  <span id="volume-display">50%</span>
+                </div>
+                <div class="audio-progress-section">
+                  <input type="range" id="audio-progress" min="0" max="100" value="0" />
+                </div>
+                <div class="audio-time-display">
+                  <span id="current-time">00:00</span>
+                  <span id="total-time">00:00</span>
+                </div>
+                <div class="eq-visualization">
+                  <canvas id="eq-canvas" width="300" height="150"></canvas>
+                  <div class="eq-info">
+                    <span>EQ Curve Visualization</span>
+                    <span id="eq-status" class="eq-status"></span>
+                    <button id="toggle-eq-viz">Show/Hide</button>
+                  </div>
+                </div>
+              </div>
             </div>
             <div class="extra-tone-generator">
               <h5>Tone Generator</h2>
@@ -206,10 +248,13 @@ doc.html(`
                 <span><input name="tone-generator-from" type="number" min="20" max="20000" step="1" value="20"></input></span>
                 <span><input name="tone-generator-to" type="number" min="20" max="20000" step="1" value="20000"></input></span>
               </div>
-              <div><input name="tone-generator-freq" type="range" min="0" max="1" step="0.0001" value="0" /></div>
+              <div class="settings-row">
+                <span>Frequency (Hz)</span>
+                <span><input name="tone-generator-freq" type="number" min="20" max="20000" step="1" value="20"></input></span>
+              </div>
               <div>
                 <button class="play">Play</button>
-                <span>Frequency: <span class="freq-text">20</span> Hz</span>
+                <span>Current: <span class="freq-text">20</span> Hz</span>
               </div>
             </div>
           </div>
@@ -1638,7 +1683,9 @@ function asPhoneObj(b, p, isInit, inits) {
     let r = { brand:b, dispBrand:b.name };
     if (typeof p === "string") {
         r.phone = r.fileName = p;
-        if (isInit(p)) inits.push(r);
+        if (isInit(p) && !inits.find(existing => existing.fileName === p)) {
+            inits.push(r);
+        }
     } else {
         r.phone = p.name;
         if (p.collab) {
@@ -1648,7 +1695,9 @@ function asPhoneObj(b, p, isInit, inits) {
         let f = p.file || p.name;
         if (typeof f === "string") {
             r.fileName = f;
-            if (isInit(f)) inits.push(r);
+            if (isInit(f) && !inits.find(existing => existing.fileName === f)) {
+                inits.push(r);
+            }
         } else {
             r.fileNames = f;
             r.vars = {};
@@ -1670,9 +1719,12 @@ function asPhoneObj(b, p, isInit, inits) {
             let c = r;
             f.map((fn,i) => {
                 if (!isInit(fn)) return;
-                c.fileName=fn; c.dispName=dns[i];
-                inits.push(c);
-                c = {copyOf:r};
+                // Check for duplicate before adding
+                if (!inits.find(existing => existing.fileName === fn)) {
+                    c.fileName=fn; c.dispName=dns[i];
+                    inits.push(c);
+                    c = {copyOf:r};
+                }
             });
         }
     }
@@ -1699,6 +1751,10 @@ d3.json(typeof PHONE_BOOK !== "undefined" ? PHONE_BOOK
         } else if (url.includes(par)) {
             initReq = decodeURIComponent(url.replace(/_/g," ").split(par).pop()).split(",");
             loadFromShare = 1;
+        }
+        // Clear init_phones when loading from share URL to prevent duplicates
+        if (loadFromShare > 0) {
+            initReq = initReq || [];
         }
     }
     let isInit = initReq ? f => initReq.indexOf(f) !== -1
@@ -1781,7 +1837,9 @@ d3.json(typeof PHONE_BOOK !== "undefined" ? PHONE_BOOK
             .data();
         ts.forEach((t,i) => {
             t.id = i-ts.length;
-            if (isInit(t.fileName)) inits.push(t);
+            if (isInit(t.fileName) && !inits.find(existing => existing.fileName === t.fileName)) {
+                inits.push(t);
+            }
         });
     }
 
@@ -2270,6 +2328,12 @@ function addExtra() {
     }
     if (!extraToneGeneratorEnabled) {
         document.querySelector("div.extra-panel > div.extra-tone-generator").style["display"] = "none";
+    } else {
+        // Ensure tone generator is visible by default when enabled
+        document.querySelector("div.extra-panel > div.extra-tone-generator").style["display"] = "block";
+    }
+    if (!extraAudioPreviewEnabled) {
+        document.querySelector("div.extra-panel > div.extra-audio-preview").style["display"] = "none";
     }
     // Show and hide extra panel
     window.showExtraPanel = () => {
@@ -2565,6 +2629,121 @@ function addExtra() {
         exportElem.download = phoneObj.fullName.replace(/^Uploaded /, "") + " Filters.txt";
         exportElem.click();
     });
+    
+    // Export filters for Poweramp EQ
+    document.querySelector("div.extra-eq button.export-poweramp").addEventListener("click", () => {
+        let phoneSelected = eqPhoneSelect.value;
+        let phoneObj = phoneSelected && activePhones.filter(
+            p => p.fullName == phoneSelected && p.eq)[0];
+        let filters = elemToFilters(true);
+        if (!phoneObj || !filters.length) {
+            alert("Please select model and add atleast one filter before export.");
+            return;
+        }
+        
+        // Count active filters and warn if more than 10
+        const activeFilters = filters.filter(f => !f.disabled && f.freq && f.q && f.gain !== 0);
+        if (activeFilters.length > 10) {
+            const userConfirm = confirm(
+                `You have ${activeFilters.length} active filters, but Poweramp only supports 10-band graphic EQ.\n\n` +
+                "The export will automatically calculate the combined effect of all your filters " +
+                "and apply them to Poweramp's 10 fixed frequency bands:\n" +
+                "31Hz, 62Hz, 125Hz, 250Hz, 500Hz, 1kHz, 2kHz, 4kHz, 8kHz, 16kHz\n\n" +
+                "Do you want to continue?"
+            );
+            if (!userConfirm) {
+                return;
+            }
+        }
+        
+        // Calculate preamp
+        let preamp = Equalizer.calc_preamp(
+            phoneObj.rawChannels.filter(c => c)[0],
+            phoneObj.eq.rawChannels.filter(c => c)[0]);
+        
+        // Define Poweramp's 10-band graphic EQ frequencies
+        const powerampFreqs = [31, 62, 125, 250, 500, 1000, 2000, 4000, 8000, 16000];
+        
+        // Calculate gains for each frequency band using current EQ
+        // This process automatically merges all parametric filters into 10 graphic EQ bands
+        // Each band gets the combined effect of all filters at that frequency
+        const coeffs = [];
+        filters.forEach(filter => {
+            if (!filter.disabled && filter.freq && filter.q && filter.gain !== 0) {
+                let coeff;
+                if (filter.type === 'PK') {
+                    coeff = Equalizer.peaking(filter.freq, filter.q, filter.gain);
+                } else if (filter.type === 'LSQ') {
+                    coeff = Equalizer.lowshelf(filter.freq, filter.q, filter.gain);
+                } else if (filter.type === 'HSQ') {
+                    coeff = Equalizer.highshelf(filter.freq, filter.q, filter.gain);
+                }
+                if (coeff) {
+                    coeffs.push(coeff);
+                }
+            }
+        });
+        
+        let bandGains;
+        if (coeffs.length > 0) {
+            bandGains = Equalizer.calc_gains(powerampFreqs, coeffs);
+        } else {
+            bandGains = new Array(powerampFreqs.length).fill(0);
+        }
+        
+        // Create EQ name from Phone + Target
+        let eqName = phoneObj.fullName.replace(/^Uploaded /, "");
+        // Get target from activePhones
+        let targetObj = activePhones.filter(p => p.isTarget)[0];
+        if (targetObj && targetObj.fullName) {
+            eqName += "-" + targetObj.fullName.replace(/^Uploaded /, "");
+        }
+        
+        // Create Poweramp EQ format
+        const powerampEQ = [{
+            "name": eqName,
+            "preamp": -preamp,
+            "parametric": false,
+            "bands": []
+        }];
+        
+        // Add the 10 graphic EQ bands only
+        powerampFreqs.forEach((freq, i) => {
+            powerampEQ[0].bands.push({
+                "type": 2,
+                "channels": 0,
+                "frequency": freq,
+                "q": 0.0,
+                "gain": bandGains[i],
+                "color": 0
+            });
+        });
+        
+        // Export as JSON file
+        const jsonString = JSON.stringify(powerampEQ, null, '\t');
+        let exportElem = document.querySelector("#file-filters-export");
+        exportElem.href && URL.revokeObjectURL(exportElem.href);
+        exportElem.href = URL.createObjectURL(new Blob([jsonString], {type: 'application/json'}));
+        
+        // Create filename with format: Phone Name - Target Name
+        let filename = phoneObj.fullName.replace(/^Uploaded /, "");
+        
+        // Reuse targetObj for filename (already defined above)
+        console.log("Target object:", targetObj);
+        console.log("Active phones:", activePhones);
+        
+        if (targetObj && targetObj.fullName) {
+            filename += "-" + targetObj.fullName.replace(/^Uploaded /, "");
+            console.log("Added target to filename:", targetObj.fullName);
+        } else {
+            console.log("No target detected - using phone name only");
+        }
+        filename += ".json";
+        
+        exportElem.download = filename;
+        exportElem.click();
+    });
+    
     // Export filters as graphic eq (for wavelet)
     document.querySelector("div.extra-eq button.export-graphic-filters").addEventListener("click", () => {
         let phoneSelected = eqPhoneSelect.value;
@@ -2648,25 +2827,93 @@ function addExtra() {
     // Tone Generator
     let toneGeneratorFromInput = document.querySelector("div.extra-tone-generator input[name='tone-generator-from']");
     let toneGeneratorToInput = document.querySelector("div.extra-tone-generator input[name='tone-generator-to']");
-    let toneGeneratorSlider = document.querySelector("div.extra-tone-generator input[name='tone-generator-freq']");
+    let toneGeneratorFreqInput = document.querySelector("div.extra-tone-generator input[name='tone-generator-freq']");
     let toneGeneratorPlayButton = document.querySelector("div.extra-tone-generator .play");
     let toneGeneratorText = document.querySelector("div.extra-tone-generator .freq-text");
     let toneGeneratorContext = null;
     let toneGeneratorOsc = null;
-    let toneGeneratorTimeoutHandle = null
-    toneGeneratorSlider.addEventListener("input", () => {
-        let from = Math.min(Math.max(parseInt(toneGeneratorFromInput.value) || 0, 20), 20000);
-        let to = Math.min(Math.max(parseInt(toneGeneratorToInput.value) || 0, from), 20000);
-        let position = parseFloat(toneGeneratorSlider.value) || 0;
-        let freq = Math.round(Math.exp( // Slider move in log scale
-            Math.log(from) + (Math.log(to) - Math.log(from)) * position));
-        toneGeneratorText.innerText = freq;
+    let toneGeneratorTimeoutHandle = null;
+    
+    // Update frequency range limits
+    function updateFrequencyLimits() {
+        let from = Math.min(Math.max(parseInt(toneGeneratorFromInput.value) || 20, 20), 20000);
+        let to = Math.min(Math.max(parseInt(toneGeneratorToInput.value) || 20, from), 20000);
+        
+        // Update the limits
+        toneGeneratorFromInput.value = from;
+        toneGeneratorToInput.value = to;
+        
+        // Update frequency input limits
+        toneGeneratorFreqInput.min = from;
+        toneGeneratorFreqInput.max = to;
+        
+        // Clamp current frequency to new range
+        let currentFreq = parseInt(toneGeneratorFreqInput.value) || from;
+        if (currentFreq < from) {
+            currentFreq = from;
+        } else if (currentFreq > to) {
+            currentFreq = to;
+        }
+        
+        toneGeneratorFreqInput.value = currentFreq;
+        toneGeneratorText.innerText = currentFreq;
+        
+        // Update oscillator if playing
         if (toneGeneratorOsc) {
             let t = toneGeneratorContext.currentTime;
             toneGeneratorOsc.frequency.cancelScheduledValues(t);
-            toneGeneratorOsc.frequency.setTargetAtTime(freq, t, 0.2); // Smoother transition but also delay
+            toneGeneratorOsc.frequency.setTargetAtTime(currentFreq, t, 0.2);
+        }
+    }
+    
+    // Handle frequency range changes
+    toneGeneratorFromInput.addEventListener("input", updateFrequencyLimits);
+    toneGeneratorToInput.addEventListener("input", updateFrequencyLimits);
+    
+    // Handle frequency input changes
+    toneGeneratorFreqInput.addEventListener("input", () => {
+        let from = parseInt(toneGeneratorFromInput.value) || 20;
+        let to = parseInt(toneGeneratorToInput.value) || 20000;
+        let freq = Math.min(Math.max(parseInt(toneGeneratorFreqInput.value) || from, from), to);
+        
+        toneGeneratorFreqInput.value = freq;
+        toneGeneratorText.innerText = freq;
+        
+        if (toneGeneratorOsc) {
+            let t = toneGeneratorContext.currentTime;
+            toneGeneratorOsc.frequency.cancelScheduledValues(t);
+            toneGeneratorOsc.frequency.setTargetAtTime(freq, t, 0.2);
         }
     });
+    
+    // Add keyboard shortcuts for frequency input
+    toneGeneratorFreqInput.addEventListener("keydown", (e) => {
+        let currentFreq = parseInt(toneGeneratorFreqInput.value) || 20;
+        let from = parseInt(toneGeneratorFromInput.value) || 20;
+        let to = parseInt(toneGeneratorToInput.value) || 20000;
+        let step = 1;
+        
+        // Dynamic step size based on frequency range
+        if (currentFreq < 100) step = 1;
+        else if (currentFreq < 1000) step = 10;
+        else if (currentFreq < 10000) step = 100;
+        else step = 500;
+        
+        if (e.key === "ArrowUp" || e.key === "ArrowRight") {
+            e.preventDefault();
+            let newFreq = Math.min(currentFreq + step, to);
+            toneGeneratorFreqInput.value = newFreq;
+            toneGeneratorFreqInput.dispatchEvent(new Event('input'));
+        } else if (e.key === "ArrowDown" || e.key === "ArrowLeft") {
+            e.preventDefault();
+            let newFreq = Math.max(currentFreq - step, from);
+            toneGeneratorFreqInput.value = newFreq;
+            toneGeneratorFreqInput.dispatchEvent(new Event('input'));
+        }
+    });
+    
+    // Initialize frequency limits on load
+    updateFrequencyLimits();
     toneGeneratorPlayButton.addEventListener("click", () => {
         if (toneGeneratorOsc) {
             toneGeneratorOsc.stop();
@@ -2682,12 +2929,802 @@ function addExtra() {
             }
             toneGeneratorOsc = toneGeneratorContext.createOscillator();
             toneGeneratorOsc.type = "sine";
-            toneGeneratorOsc.frequency.value = parseInt(toneGeneratorText.innerText);
+            toneGeneratorOsc.frequency.value = parseInt(toneGeneratorFreqInput.value) || 20;
             toneGeneratorOsc.connect(toneGeneratorContext.destination);
             toneGeneratorOsc.start();
             toneGeneratorPlayButton.innerText = "Stop";
         }
     });
+    
+    // Audio Preview Function
+    let audioUploadButton = document.querySelector("div.extra-audio-preview button.upload-audio");
+    let fileAudioInput = document.querySelector("#file-audio");
+    let audioPlayerSection = document.querySelector("div.extra-audio-preview .audio-player-section");
+    let audioFilename = document.querySelector("#audio-filename");
+    let playToggleButton = document.querySelector("#play-toggle");
+    let stopAudioButton = document.querySelector("#stop-audio");
+    let enableAllEQButton = document.querySelector("#enable-all-eq");
+    let disableAllEQButton = document.querySelector("#disable-all-eq");
+    let removeAudioButton = document.querySelector("#remove-audio");
+    let audioVolumeSlider = document.querySelector("#audio-volume");
+    let volumeDisplay = document.querySelector("#volume-display");
+    let audioProgressSlider = document.querySelector("#audio-progress");
+    let currentTimeDisplay = document.querySelector("#current-time");
+    let totalTimeDisplay = document.querySelector("#total-time");
+    let eqCanvas = document.querySelector("#eq-canvas");
+    let toggleEQVizButton = document.querySelector("#toggle-eq-viz");
+    let eqStatusDisplay = document.querySelector("#eq-status");
+    let toneGeneratorSection = document.querySelector("div.extra-tone-generator");
+    
+    let audioContext = null;
+    let audioBuffer = null;
+    let audioSource = null;
+    let gainNode = null;
+    let eqNodes = [];
+    let currentAudioFile = null;
+    let isPlaying = false;
+    let startTime = 0;
+    let pauseTime = 0;
+    let animationFrame = null;
+    let isEQVizVisible = true;
+    let isSeeking = false;
+    let currentPlayMode = 'original'; // 'original' or 'eq'
+    
+    // Update slider visual progress
+    function updateSliderProgress(slider, percent) {
+        slider.style.setProperty('--range-percent', percent + '%');
+    }
+    
+    // Check if any EQ filters are active
+    function hasActiveEQFilters() {
+        let filters = elemToFilters();
+        return filters.length > 0;
+    }
+    
+    // Enable all EQ filters
+    function enableAllEQFilters() {
+        const filterCheckboxes = document.querySelectorAll('div.filters input[name="enabled"]');
+        filterCheckboxes.forEach(checkbox => {
+            checkbox.checked = true;
+        });
+        
+        // Trigger update
+        setTimeout(() => {
+            updateEQFiltersRealtime();
+            drawEQCurve();
+        }, 50);
+    }
+    
+    // Disable all EQ filters
+    function disableAllEQFilters() {
+        const filterCheckboxes = document.querySelectorAll('div.filters input[name="enabled"]');
+        filterCheckboxes.forEach(checkbox => {
+            checkbox.checked = false;
+        });
+        
+        // Trigger update
+        setTimeout(() => {
+            updateEQFiltersRealtime();
+            drawEQCurve();
+        }, 50);
+    }
+    
+    // Format time display
+    function formatTime(seconds) {
+        const mins = Math.floor(seconds / 60);
+        const secs = Math.floor(seconds % 60);
+        return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+    }
+    
+    // Draw EQ curve visualization
+    function drawEQCurve() {
+        if (!eqCanvas || !isEQVizVisible) return;
+        
+        const ctx = eqCanvas.getContext('2d');
+        const width = eqCanvas.width;
+        const height = eqCanvas.height;
+        
+        // Clear canvas
+        ctx.clearRect(0, 0, width, height);
+        
+        // Calculate dynamic range based on current filters
+        const filters = elemToFilters();
+        let maxGain = 0;
+        let minGain = 0;
+        
+        // Find actual gain range from filters
+        filters.forEach(filter => {
+            if (!filter.disabled && filter.gain) {
+                maxGain = Math.max(maxGain, Math.abs(filter.gain));
+                minGain = Math.min(minGain, -Math.abs(filter.gain));
+            }
+        });
+        
+        // Set reasonable range with 5dB increments, minimum ±15dB
+        const range = Math.max(15, Math.ceil(maxGain / 5) * 5);
+        const dbStep = 5; // 5dB per grid line
+        const gridLines = Math.floor(range / dbStep);
+        
+        // Draw grid
+        ctx.strokeStyle = getComputedStyle(document.documentElement).getPropertyValue('--background-color-contrast-more').trim();
+        ctx.lineWidth = 0.5;
+        
+        // Horizontal lines (dB) - draw from -range to +range with 5dB steps
+        for (let i = -gridLines; i <= gridLines; i++) {
+            const dbValue = i * dbStep;
+            const y = height/2 - (dbValue / range) * (height/2);
+            ctx.beginPath();
+            ctx.moveTo(0, y);
+            ctx.lineTo(width, y);
+            ctx.stroke();
+        }
+        
+        // Vertical lines (frequency) - align with frequency labels
+        const freqGridLines = [20, 50, 100, 200, 500, 1000, 2000, 5000, 10000, 20000];
+        freqGridLines.forEach(freq => {
+            const logPos = (Math.log10(freq) - Math.log10(20)) / (Math.log10(20000) - Math.log10(20));
+            const x = logPos * width;
+            ctx.beginPath();
+            ctx.moveTo(x, 0);
+            ctx.lineTo(x, height);
+            ctx.stroke();
+        });
+        
+        // Always draw a curve - either flat line or actual EQ curve
+        ctx.strokeStyle = getComputedStyle(document.documentElement).getPropertyValue('--accent-color').trim();
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        
+        const freqs = [];
+        for (let i = 0; i < width; i++) {
+            const logFreq = Math.log10(20) + (i / width) * (Math.log10(20000) - Math.log10(20));
+            freqs.push(Math.pow(10, logFreq));
+        }
+        
+        // Calculate response for each frequency using proper biquad calculations
+        const freqValues = freqs.map(f => f);
+        let totalGains;
+        
+        if (filters.length > 0) {
+            // Get biquad coefficients for all enabled filters
+            const coeffs = [];
+            filters.forEach(filter => {
+                if (!filter.disabled && filter.freq && filter.q && filter.gain !== 0) {
+                    let coeff;
+                    if (filter.type === 'PK') {
+                        coeff = Equalizer.peaking(filter.freq, filter.q, filter.gain);
+                    } else if (filter.type === 'LSQ') {
+                        coeff = Equalizer.lowshelf(filter.freq, filter.q, filter.gain);
+                    } else if (filter.type === 'HSQ') {
+                        coeff = Equalizer.highshelf(filter.freq, filter.q, filter.gain);
+                    }
+                    if (coeff) {
+                        coeffs.push(coeff);
+                    }
+                }
+            });
+            
+            // Calculate frequency response using proper biquad math
+            if (coeffs.length > 0) {
+                totalGains = Equalizer.calc_gains(freqValues, coeffs);
+            } else {
+                totalGains = new Array(freqs.length).fill(0);
+            }
+        } else {
+            totalGains = new Array(freqs.length).fill(0);
+        }
+        
+        // Draw the curve using calculated gains
+        for (let i = 0; i < freqs.length; i++) {
+            const x = i;
+            const y = height/2 - (totalGains[i] / range) * (height/2);
+            
+            if (i === 0) {
+                ctx.moveTo(x, y);
+            } else {
+                ctx.lineTo(x, y);
+            }
+        }
+        
+        ctx.stroke();
+        
+        // Draw labels with dynamic dB values
+        ctx.fillStyle = '#666';
+        ctx.font = '10px Arial';
+        
+        // Draw frequency labels (logarithmic scale like main canvas)
+        const freqLabels = [20, 50, 100, 200, 500, 1000, 2000, 5000, 10000, 20000];
+        freqLabels.forEach(freq => {
+            const logPos = (Math.log10(freq) - Math.log10(20)) / (Math.log10(20000) - Math.log10(20));
+            const x = logPos * width;
+            
+            // Format frequency label
+            let label;
+            if (freq >= 1000) {
+                label = (freq / 1000) + 'k';
+            } else {
+                label = freq + '';
+            }
+            
+            // Draw frequency label at bottom
+            ctx.fillText(label, x - 10, height - 5);
+        });
+        
+        // Draw dB labels at 5dB intervals
+        for (let i = -gridLines; i <= gridLines; i++) {
+            const dbValue = i * dbStep;
+            const y = height/2 - (dbValue / range) * (height/2);
+            
+            if (dbValue === 0) {
+                ctx.fillText('0dB', 5, y + 4);
+            } else if (dbValue > 0) {
+                ctx.fillText(`+${dbValue}dB`, 5, y + 4);
+            } else {
+                ctx.fillText(`${dbValue}dB`, 5, y + 4);
+            }
+        }
+    }
+    
+    // Update time displays and progress
+    function updateProgress() {
+        if (audioContext && audioSource && isPlaying && !isSeeking) {
+            const currentTime = audioContext.currentTime - startTime + pauseTime;
+            const duration = audioBuffer ? audioBuffer.duration : 0;
+            
+            if (currentTime >= duration) {
+                stopAudio();
+                return;
+            }
+            
+            currentTimeDisplay.textContent = formatTime(currentTime);
+            const progressPercent = duration > 0 ? (currentTime / duration) * 100 : 0;
+            audioProgressSlider.value = progressPercent;
+            updateSliderProgress(audioProgressSlider, progressPercent);
+            
+            // Update EQ visualization
+            drawEQCurve();
+            
+            animationFrame = requestAnimationFrame(updateProgress);
+        }
+    }
+    
+    // Stop audio playback
+    function stopAudio() {
+        if (audioSource) {
+            audioSource.stop();
+            audioSource = null;
+        }
+        isPlaying = false;
+        pauseTime = 0;
+        startTime = 0;
+        eqNodes = [];
+        playToggleButton.textContent = "Play";
+        
+        // Clear status indicator
+        if (eqStatusDisplay) {
+            eqStatusDisplay.textContent = "";
+            eqStatusDisplay.className = "eq-status";
+        }
+        
+        if (animationFrame) {
+            cancelAnimationFrame(animationFrame);
+            animationFrame = null;
+        }
+    }
+    
+    // Create EQ filters from current settings
+    function createEQFilters() {
+        if (!audioContext) return [];
+        
+        let filters = elemToFilters();
+        let nodes = [];
+        let sampleRate = audioContext.sampleRate;
+        
+        filters.forEach(filter => {
+            if (filter.disabled || !filter.freq || !filter.q) return;
+            
+            let biquadFilter = audioContext.createBiquadFilter();
+            let coeffs;
+            
+            // Calculate biquad coefficients using equalizer.js functions
+            switch (filter.type) {
+                case 'PK':
+                    coeffs = Equalizer.peaking(filter.freq, filter.q, filter.gain, sampleRate);
+                    break;
+                case 'LSQ':
+                    coeffs = Equalizer.lowshelf(filter.freq, filter.q, filter.gain, sampleRate);
+                    break;
+                case 'HSQ':
+                    coeffs = Equalizer.highshelf(filter.freq, filter.q, filter.gain, sampleRate);
+                    break;
+                default:
+                    coeffs = Equalizer.peaking(filter.freq, filter.q, filter.gain, sampleRate);
+            }
+            
+            // Set biquad filter coefficients manually
+            // coeffs = [a0, a1, a2, b0, b1, b2]
+            if (coeffs && coeffs.length >= 6) {
+                // For IIR filter, we need to set the coefficients directly
+                // But Web Audio API biquad filters use different parameters
+                // So we'll use the standard approach with frequency, Q, and gain
+                
+                switch (filter.type) {
+                    case 'PK':
+                        biquadFilter.type = 'peaking';
+                        break;
+                    case 'LSQ':
+                        biquadFilter.type = 'lowshelf';
+                        break;
+                    case 'HSQ':
+                        biquadFilter.type = 'highshelf';
+                        break;
+                    default:
+                        biquadFilter.type = 'peaking';
+                }
+                
+                biquadFilter.frequency.value = filter.freq;
+                biquadFilter.Q.value = filter.q;
+                biquadFilter.gain.value = filter.gain;
+                
+                nodes.push(biquadFilter);
+            }
+        });
+        
+        return nodes;
+    }
+    
+    // Play audio with automatic EQ detection
+    function playAudio() {
+        if (!audioBuffer || !audioContext) return;
+        
+        stopAudio();
+        
+        // Automatically determine if EQ should be applied
+        const withEQ = hasActiveEQFilters();
+        currentPlayMode = withEQ ? 'eq' : 'original';
+        
+        audioSource = audioContext.createBufferSource();
+        audioSource.buffer = audioBuffer;
+        gainNode = audioContext.createGain();
+        gainNode.gain.value = parseFloat(audioVolumeSlider.value);
+        
+        // Connect audio chain
+        let currentNode = audioSource;
+        
+        if (withEQ) {
+            eqNodes = createEQFilters();
+            eqNodes.forEach(node => {
+                currentNode.connect(node);
+                currentNode = node;
+            });
+        }
+        
+        currentNode.connect(gainNode);
+        gainNode.connect(audioContext.destination);
+        
+        // Calculate start position from progress slider
+        // If audio has ended (progress at 100%), start from beginning
+        let progressValue = parseFloat(audioProgressSlider.value);
+        if (progressValue >= 99.9) { // Close to 100% means audio has ended
+            progressValue = 0;
+            audioProgressSlider.value = 0;
+            audioProgressSlider.style.setProperty('--range-percent', '0%');
+            // Update time display to show reset to beginning
+            currentTimeDisplay.textContent = "00:00";
+        }
+        const startPosition = (progressValue / 100) * audioBuffer.duration;
+        pauseTime = startPosition;
+        
+        audioSource.start(0, startPosition);
+        startTime = audioContext.currentTime;
+        isPlaying = true;
+        
+        updateProgress();
+        drawEQCurve();
+        
+        // Update status indicator and button text
+        if (eqStatusDisplay) {
+            if (withEQ) {
+                eqStatusDisplay.textContent = "✓ EQ Active";
+                eqStatusDisplay.className = "eq-status active";
+            } else {
+                eqStatusDisplay.textContent = "Original Audio";
+                eqStatusDisplay.className = "eq-status";
+            }
+        }
+        
+        playToggleButton.textContent = withEQ ? "Pause (EQ)" : "Pause (Original)";
+    }
+    
+    // Update EQ filters in real-time while playing
+    function updateEQFiltersRealtime() {
+        if (!isPlaying || eqNodes.length === 0 || !audioContext) return;
+        
+        // Update status indicator
+        if (eqStatusDisplay) {
+            eqStatusDisplay.textContent = "🔄 Updating EQ...";
+            eqStatusDisplay.className = "eq-status updating";
+        }
+        
+        let filters = elemToFilters();
+        
+        // Update existing nodes or recreate if count changed
+        if (filters.length !== eqNodes.length) {
+            // Need to recreate audio chain with new filter count
+            if (isPlaying) {
+                // Save current position and restart
+                const currentTime = audioContext.currentTime - startTime + pauseTime;
+                pauseTime = currentTime;
+                stopAudio();
+                setTimeout(() => playAudio(), 50);
+            }
+            return;
+        }
+        
+        // Update existing filter parameters in real-time
+        filters.forEach((filter, index) => {
+            if (index >= eqNodes.length) return;
+            
+            const node = eqNodes[index];
+            
+            if (!filter.disabled && filter.freq && filter.q) {
+                // Update filter parameters smoothly
+                const currentTime = audioContext.currentTime;
+                
+                // Set target values with smooth transitions
+                node.frequency.cancelScheduledValues(currentTime);
+                node.Q.cancelScheduledValues(currentTime);
+                node.gain.cancelScheduledValues(currentTime);
+                
+                node.frequency.setTargetAtTime(filter.freq, currentTime, 0.01);
+                node.Q.setTargetAtTime(filter.q, currentTime, 0.01);
+                node.gain.setTargetAtTime(filter.gain, currentTime, 0.01);
+                
+                // Update filter type if changed
+                const newType = getFilterType(filter.type);
+                if (node.type !== newType) {
+                    node.type = newType;
+                }
+            } else {
+                // Disable filter by setting gain to 0
+                node.gain.setTargetAtTime(0, audioContext.currentTime, 0.01);
+            }
+        });
+        
+        // Update status indicator
+        setTimeout(() => {
+            if (eqStatusDisplay) {
+                eqStatusDisplay.textContent = "✓ EQ Active";
+                eqStatusDisplay.className = "eq-status active";
+            }
+        }, 100);
+    }
+    
+    // Helper function to get Web Audio API filter type
+    function getFilterType(eqType) {
+        switch (eqType) {
+            case 'PK': return 'peaking';
+            case 'LSQ': return 'lowshelf';
+            case 'HSQ': return 'highshelf';
+            default: return 'peaking';
+        }
+    }
+    
+    // Seek to new position while playing
+    function seekToPosition(position) {
+        if (!audioBuffer || !audioContext) return;
+        
+        const wasPlaying = isPlaying;
+        
+        if (wasPlaying) {
+            stopAudio();
+            pauseTime = (position / 100) * audioBuffer.duration;
+            setTimeout(() => {
+                playAudio();
+            }, 50);
+        } else {
+            pauseTime = (position / 100) * audioBuffer.duration;
+            currentTimeDisplay.textContent = formatTime(pauseTime);
+        }
+    }
+    
+    // Event listeners
+    audioUploadButton.addEventListener("click", () => {
+        fileAudioInput.click();
+    });
+    
+    fileAudioInput.addEventListener("change", (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        
+        // Check file size (limit to 50MB)
+        if (file.size > 500 * 1024 * 1024) {
+            alert("File is too large. Please select a file smaller than 50MB.");
+            return;
+        }
+        
+        audioFilename.textContent = file.name;
+        currentAudioFile = file;
+        
+        // Initialize AudioContext if needed
+        if (!audioContext) {
+            audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        }
+        
+        // Show loading state
+        audioFilename.textContent = file.name + " (Loading...)";
+        playToggleButton.disabled = true;
+        
+        // Read file and decode
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            audioContext.decodeAudioData(e.target.result)
+                .then(buffer => {
+                    audioBuffer = buffer;
+                    totalTimeDisplay.textContent = formatTime(buffer.duration);
+                    currentTimeDisplay.textContent = "00:00";
+                    audioProgressSlider.value = 0;
+                    updateSliderProgress(audioProgressSlider, 0);
+                    updateSliderProgress(audioVolumeSlider, parseFloat(audioVolumeSlider.value) * 100);
+                    audioPlayerSection.style.display = "block";
+                    audioFilename.textContent = file.name;
+                    playToggleButton.disabled = false;
+                    
+                    // Hide tone generator when audio is uploaded
+                    if (toneGeneratorSection) {
+                        toneGeneratorSection.style.display = "none";
+                    }
+                })
+                .catch(err => {
+                    audioFilename.textContent = file.name + " (Error)";
+                    alert("Failed to decode audio file: " + err.message);
+                    playToggleButton.disabled = false;
+                });
+        };
+        reader.readAsArrayBuffer(file);
+    });
+    
+    playToggleButton.addEventListener("click", () => {
+        if (!audioBuffer) {
+            alert("Please upload an audio file first.");
+            return;
+        }
+        
+        if (!isPlaying) {
+            playAudio();
+        } else {
+            stopAudio();
+        }
+    });
+    
+    enableAllEQButton.addEventListener("click", () => {
+        enableAllEQFilters();
+        
+        // If currently playing without EQ, restart to apply changes
+        if (isPlaying && currentPlayMode === 'original') {
+            const currentTime = audioContext.currentTime - startTime + pauseTime;
+            pauseTime = currentTime;
+            stopAudio();
+            setTimeout(() => playAudio(), 100);
+        }
+    });
+    
+    disableAllEQButton.addEventListener("click", () => {
+        disableAllEQFilters();
+        
+        // If currently playing with EQ, restart to apply changes
+        if (isPlaying && currentPlayMode === 'eq') {
+            const currentTime = audioContext.currentTime - startTime + pauseTime;
+            pauseTime = currentTime;
+            stopAudio();
+            setTimeout(() => playAudio(), 100);
+        }
+    });
+    
+    stopAudioButton.addEventListener("click", stopAudio);
+    
+    // Remove audio function
+    function removeAudio() {
+        // Stop audio if playing
+        stopAudio();
+        
+        // Clear audio buffer and context
+        audioBuffer = null;
+        currentAudioFile = null;
+        if (audioSource) {
+            audioSource = null;
+        }
+        
+        // Reset UI
+        audioPlayerSection.style.display = "none";
+        audioFilename.textContent = "No file selected";
+        currentTimeDisplay.textContent = "00:00";
+        totalTimeDisplay.textContent = "00:00";
+        audioProgressSlider.value = 0;
+        audioVolumeSlider.value = 0.5;
+        volumeDisplay.textContent = "50%";
+        playToggleButton.textContent = "Play";
+        playToggleButton.disabled = false;
+        
+        // Reset file input
+        fileAudioInput.value = "";
+        
+        // Show tone generator again
+        if (toneGeneratorSection) {
+            toneGeneratorSection.style.display = "block";
+        }
+        
+        // Clear canvas
+        if (eqCanvas) {
+            const ctx = eqCanvas.getContext('2d');
+            ctx.clearRect(0, 0, eqCanvas.width, eqCanvas.height);
+        }
+    }
+    
+    removeAudioButton.addEventListener("click", removeAudio);
+    
+    audioVolumeSlider.addEventListener("input", () => {
+        const volume = parseFloat(audioVolumeSlider.value);
+        volumeDisplay.textContent = Math.round(volume * 100) + "%";
+        updateSliderProgress(audioVolumeSlider, volume * 100);
+        if (gainNode) {
+            gainNode.gain.value = volume;
+        }
+    });
+    
+    audioProgressSlider.addEventListener("input", () => {
+        isSeeking = true;
+        if (audioBuffer) {
+            const time = (parseFloat(audioProgressSlider.value) / 100) * audioBuffer.duration;
+            currentTimeDisplay.textContent = formatTime(time);
+            updateSliderProgress(audioProgressSlider, parseFloat(audioProgressSlider.value));
+        }
+    });
+    
+    audioProgressSlider.addEventListener("change", () => {
+        isSeeking = false;
+        if (audioBuffer) {
+            const position = parseFloat(audioProgressSlider.value);
+            seekToPosition(position);
+        }
+    });
+    
+    // Mouse up event for more responsive seeking
+    audioProgressSlider.addEventListener("mouseup", () => {
+        isSeeking = false;
+        if (audioBuffer) {
+            const position = parseFloat(audioProgressSlider.value);
+            seekToPosition(position);
+        }
+    });
+    
+    // Touch end for mobile
+    audioProgressSlider.addEventListener("touchend", () => {
+        isSeeking = false;
+        if (audioBuffer) {
+            const position = parseFloat(audioProgressSlider.value);
+            seekToPosition(position);
+        }
+    });
+    
+    // EQ Visualization toggle
+    toggleEQVizButton.addEventListener("click", () => {
+        isEQVizVisible = !isEQVizVisible;
+        eqCanvas.style.display = isEQVizVisible ? "block" : "none";
+        toggleEQVizButton.textContent = isEQVizVisible ? "Hide" : "Show";
+        if (isEQVizVisible) {
+            drawEQCurve();
+        }
+    });
+    
+    // Update EQ visualization when filters change
+    let originalApplyEQ = applyEQ;
+    applyEQ = function() {
+        originalApplyEQ();
+        setTimeout(() => {
+            drawEQCurve();
+            updateEQFiltersRealtime();
+        }, 50);
+    };
+    
+    // Hook into filter input changes for real-time updates
+    function hookEQInputs() {
+        const filterInputs = document.querySelectorAll('div.filters input, div.filters select');
+        filterInputs.forEach(input => {
+            // Remove existing listeners to avoid duplicates
+            input.removeEventListener('input', handleEQChange);
+            input.removeEventListener('change', handleEQChange);
+            
+            // Add new listeners
+            input.addEventListener('input', handleEQChange);
+            input.addEventListener('change', handleEQChange);
+        });
+    }
+    
+    function handleEQChange() {
+        // Debounce rapid changes
+        clearTimeout(window.eqChangeTimeout);
+        window.eqChangeTimeout = setTimeout(() => {
+            const wasPlaying = isPlaying;
+            const hasEQ = hasActiveEQFilters();
+            
+            // If playing state doesn't match EQ state, restart playback
+            if (wasPlaying && ((currentPlayMode === 'eq') !== hasEQ)) {
+                const currentTime = audioContext.currentTime - startTime + pauseTime;
+                pauseTime = currentTime;
+                stopAudio();
+                setTimeout(() => playAudio(), 100);
+            } else {
+                updateEQFiltersRealtime();
+            }
+            
+            drawEQCurve();
+        }, 50);
+    }
+    
+    // Hook into AutoEQ button
+    const autoEQButton = document.querySelector("div.extra-eq button.autoeq");
+    if (autoEQButton) {
+        const originalAutoEQClick = autoEQButton.onclick;
+        autoEQButton.addEventListener('click', () => {
+            // Wait for AutoEQ to complete then update
+            setTimeout(() => {
+                updateEQFiltersRealtime();
+                drawEQCurve();
+                hookEQInputs(); // Re-hook inputs after AutoEQ changes
+            }, 1000);
+        });
+    }
+    
+    // Hook into add/remove filter buttons
+    const addFilterButton = document.querySelector("div.extra-eq button.add-filter");
+    const removeFilterButton = document.querySelector("div.extra-eq button.remove-filter");
+    
+    if (addFilterButton) {
+        addFilterButton.addEventListener('click', () => {
+            setTimeout(() => {
+                hookEQInputs();
+                updateEQFiltersRealtime();
+                drawEQCurve();
+            }, 100);
+        });
+    }
+    
+    if (removeFilterButton) {
+        removeFilterButton.addEventListener('click', () => {
+            setTimeout(() => {
+                hookEQInputs();
+                updateEQFiltersRealtime();
+                drawEQCurve();
+            }, 100);
+        });
+    }
+    
+    // Initialize EQ visualization and hooks
+    setTimeout(() => {
+        if (eqCanvas) {
+            drawEQCurve();
+        }
+        hookEQInputs();
+        
+        // Set up mutation observer to catch dynamic changes
+        const filtersContainer = document.querySelector('div.filters');
+        if (filtersContainer) {
+            const observer = new MutationObserver(() => {
+                setTimeout(() => {
+                    hookEQInputs();
+                    updateEQFiltersRealtime();
+                    drawEQCurve();
+                }, 100);
+            });
+            
+            observer.observe(filtersContainer, {
+                childList: true,
+                subtree: true,
+                attributes: true
+            });
+        }
+    }, 500);
     
 }
 addExtra();

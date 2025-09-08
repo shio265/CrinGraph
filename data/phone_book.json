@@ -1,79 +1,110 @@
 [
   {
-    "name": "Combinations",
+    "name": "CCA",
+    "phones": [{ "name": "CRA" }, { "name": "CRA+", "file": ["CRA Plus"] }]
+  },
+  {
+    "name": "Commo",
+    "phones": [{ "name": "Immersive", "file": ["Immersive (ANC)"] }]
+  },
+  {
+    "name": "Moondrop",
     "phones": [
-        {"name":["Variations"],"file":["Combo Variant 1","Combo Variant 2","Combo Variant 3","Combo Variant 4"],"suffix":["var1","var2","var3","var4"]}
+      { "name": "Alice" },
+      { "name": "Aria" },
+      { "name": "Aria 2" },
+      { "name": "Aria: Snow Edition", "file": ["Aria Snow Edition"] },
+      { "name": "Blessing 2" },
+      { "name": "Blessing 3" },
+      { "name": "Block" },
+      { "name": "Chu" },
+      { "name": "Chu II" },
+      { "name": "Chu II DSP" },
+      { "name": "Dark Saber" },
+      { "name": "Golden Ages" },
+      { "name": "Harmon" },
+      { "name": "Kadenz" },
+      { "name": "Kato" },
+      { "name": "Kato Blue" },
+      { "name": "KXXS" },
+      { "name": "Lan" },
+      { "name": "May" },
+      { "name": "Moca" },
+      { "name": "Nekocake", "file": ["Nekocake (ANC)"] },
+      { "name": "Pill" },
+      { "name": "Quarks DSP" },
+      { "name": "Robin", "file": ["Robin (ANC)"] },
+      { "name": "Space Travel", "file": ["Space Travel (Reference)"] },
+      { "name": "Space Travel II", "file": ["Space Travel 2 (ANC)"] },
+      { "name": "Spaceship" },
+      { "name": "Sparks" },
+      { "name": "Rays" },
+      { "name": "SSR" },
+      { "name": "Ultrasonic" },
+      { "name": "Variations" },
+      { "name": "Voyager" }
     ]
   },
   {
-    "name":   "QBK",
-    "phones": [ "FQQ"
-              , "Q53"
-              , "KT"
-              , "B27"
-              , "BKF"
-              , "H2"
-              , "HH"
-              , "E05"
-              , "QK9" ]
-  }, {
-    "name":   "ZKZ",
-    "suffix": "Sound",
-    "phones": [ "H4"
-              , "HHH"
-              , "KTK"
-              , {"name":"E10 Universal","file":"E10"}
-              , "EFZ9"
-              , {"name":"THT02 Extreme","file":"THT02"}
-              , "ZK"
-              , "E40" ]
-  }, {
-    "name":   "RBG",
-    "suffix": "(Not an acronym)",
-    "phones": [ "B9"
-              , "BE0" ]
-  }, {
-    "name":   "KQQ",
-    "phones": [ "QE"
-              , "K"
-              , "H"
-              , "QH19"
-              , {"name":"T4 Reference","file":"T4"} ]
-  }, {
-    "name":   "KRKG",
-    "suffix": "Ears",
-    "phones": [ "E5"
-              , "KK16"
-              , {"name":"RG Pro Edition","file":"RG"}
-              , "T0"
-              , "KH"
-              , "K5" ]
-  }, {
-    "name":   "CQ",
-    "phones": [ "TC4"
-              , "Q2"
-              , {"name":"CE Reference","file":"CE"}
-              , {"name":"E04 Enhanced Bass","file":"E04"}
-              , "T"
-              , {"name":"TE66 Deluxe","file":"TE66"}
-              , "QHC" ]
-  }, {
-    "name":   "GG",
-    "suffix": "Hi-fi",
-    "phones": [ "T92"
-              , {"name":"H0 Pro","file":"H0"}
-              , "TG"
-              , "GGE"
-              , "HG7" ]
-  }, {
-    "name":   "GZR",
-    "phones": [ {"name":"GRR Light","file":"GRR"}
-              , "F0"
-              , "HR"
-              , "HRH"
-              , {"name":"HTH Performance","file":"HTH"}
-              , "Z"
-              , "HTH67"
-              , "HT5" ]
+    "name": "QBK",
+    "phones": [
+      { "name": "B27" },
+      { "name": "BKF" },
+      { "name": "E05" },
+      { "name": "FQQ" },
+      { "name": "H2" },
+      { "name": "HH" },
+      { "name": "KT" },
+      { "name": "Q53" },
+      { "name": "QK9" }
+    ]
+  },
+  {
+    "name": "Shure",
+    "phones": [
+      { "name": "SE215" },
+      { "name": "SE215 Special Edition Blue", "file": ["SE215 SE Blue"] }
+    ]
+  },
+  {
+    "name": "Tanchjim",
+    "phones": [
+      { "name": "Bunny" },
+      { "name": "Bunny DSP" },
+      { "name": "One" },
+      { "name": "One DSP" },
+      { "name": "Oxygen" },
+      { "name": "Oxygen S2" },
+      { "name": "Oxygen S3" }
+    ]
+  },
+  {
+    "name": "Tangzu",
+    "phones": [
+      { "name": "Tangzu Wan'er SG", "file": ["Waner SG"] },
+      { "name": "Tangzu Wan'er SG (Studio Edition)", "file": ["Waner SG SE"] },
+      { "name": "Tangzu Wan'er SG 2", "file": ["Waner SG 2"] }
+    ]
+  },
+  {
+    "name": "TruthEars",
+    "phones": [
+      { "name": "Gate" },
+      { "name": "Hexa" },
+      { "name": "Hola" },
+      { "name": "Nova" },
+      { "name": "Zero: BLUE", "file": ["Zero"] },
+      { "name": "Zero: BLUE 2", "file": ["Zero Blue"] },
+      { "name": "Zero: RED", "file": ["Zero Red"] }
+    ]
+  },
+  {
+    "name": "Simgot",
+    "phones": [
+      { "name": "EM6L" },
+      { "name": "EW100", "file": ["EW100P"] },
+      { "name": "EW200" },
+      { "name": "EW300", "file": ["EW300 Silver"] }
+    ]
   }
 ]

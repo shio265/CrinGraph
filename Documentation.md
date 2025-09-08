@@ -18,12 +18,17 @@ particular, the
 is used to load frequency response data, so CrinGraph will not work in
 Internet Explorer.
 
+The Audio Preview feature uses the [Web Audio API](https://developer.mozilla.org/en-US/docs/Web/API/Web_Audio_API)
+for real-time audio processing and EQ application. This requires a modern
+browser with Web Audio API support.
+
 ### Layout
 
 Most parts of the interface are arranged using flexboxes, and rearranged
 with CSS media queries to detect screen width and aspect ratio.
 
 There are three main layouts:
+
 * The desktop layout places the graph window at the top with the selector and manager side by side below it.
 * The mobile layout (for narrow screens) stacks everything vertically with the selector above the manager.
 * When the screen is very wide relative to its height, the selector and manager are stacked as in the mobile layout but placed right of the graph window.
@@ -120,6 +125,7 @@ natural spline tends to emphasize little bumps in the data, making it
 worse even than linear interpolation.
 
 Mathematically, a smoothing spline minimizes a weighted sum of:
+
 1. All the square differences between the original and smoothed values, and
 2. The integral of the square of the second derivative of the smoothed function.
 
@@ -324,6 +330,7 @@ cross-section along the ring, like a thick washer. Three modifications
 are made to this ring in order to account for human perception, or maybe
 imperfect perceptual uniformity of HCL space, or even unsuitability for
 lines rather than color fields.
+
 * Hues are shifted so cool colors like blues and greens appear less often, and reds and yellows more often.
 * Hues are shifted towards six colors with evenly spaced hues—the primary and secondary colors red, yellow, green, cyan, blue, and purple.
 * Chroma and luminance are shifted so that yellows are brighter and bolder, and blues darker.

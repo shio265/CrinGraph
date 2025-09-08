@@ -21,7 +21,7 @@ able to help with:
   CrinGraph repository includes sample data so it can function on its
   own. Once I had the data I just set the source to "master branch" in
   the settings under "Github Pages", and Github put the page at
-  https://mlochbaum.github.io/CrinGraph/graph.html. You can show your
+  <https://mlochbaum.github.io/CrinGraph/graph.html>. You can show your
   graphs in the same way by forking my repository and making the changes
   described here, then changing the "Github Pages" setting like I did.
 
@@ -43,7 +43,7 @@ page works and isn't claiming it's crinacle.com.
 The main page used to display graphs is [graph.html](graph.html), which
 defines the basic structure of a page and then includes a bunch of
 Javascript files that do the real work (at the end of the file).
-[graph_free.html](graph_free.html) is identical but uses a different 
+[graph_free.html](graph_free.html) is identical but uses a different
 configuration file to remove some functionality. You will only need to
 use it if you intend to have both a free and a paid graph tool.
 

@@ -1,36 +1,6 @@
-# Rohsa Graph Tool (CrinGraph)
+# Shiori  Graph Tool (CrinGraph)
 
 My graph tool based on CrinGraph.
-
-Modifications:
-
-- Remove " from "IEF \"Harman\" Target.txt", allow windows to checkout this repository
-- Provide universal csv/tsv parser, remove data_format option
-- Do not invert header and watermark in dark mode
-- Open header links on new tab
-- Interpolate frequence responses to 1/48 octave, allow difference resolution files
-- Fix label display for show/hide graphs
-- Add extra features
-    - Allow uploading frequence response file and target file
-    - Parametric equalizer
-        - Support generating EQ filters to selected target or other model automatically
-        - Support exporting parametric eq file for DSP software like Peace
-        - Support exporting graphic eq file for DSP software like Wavelet
-    - Tone generator
-- Change default options in config.js
-    - alt_layout: true
-    - labelsPosition: "bottom-right"
-    - stickyLabels: true
-
-How to use this repository for your own project:
-
-- Remove data_rohsa
-- Remove config_rohsa.js
-- Remove index.html
-- Modify config.js
-- Modify graph.html and rename it to index.html if necessary
-
-------------------------------------------------------------------
 
 ## The In-Ear Graphing Library
 
@@ -90,6 +60,7 @@ bad idea.
 ### Layout
 
 The graph tool displays:
+
 * A **graph window** at the top
 * The **toolbar** just below it
 * The **selector** at the bottom left, or below the toolbar for narrow windows
@@ -132,11 +103,3 @@ The graph tool displays:
 * Temporarily hide or unhide a graph
 * PIN a headphone to avoid losing it while adding others
 * Click the little dots at the bottom left to change a single headphone's [color](Documentation.md#colors)
-
-## Contact
-
-File a Github issue here for topics related to the project. You can also
-reach me by the email in my Github profile and the [LICENSE](LICENSE).
-I can sometimes be found on
-[Crin's Discord server](https://discord.gg/CtTqcCb) where I am
-creatively named Marshall.

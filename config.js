@@ -1,5 +1,5 @@
 // Configuration options
-const init_phones = ["HTH67"],                      // Optional. Which graphs to display on initial load. Note: Share URLs will override this set
+const init_phones = [""],                           // Optional. Which graphs to display on initial load. Note: Share URLs will override this set
       DIR = "data/",                                // Directory where graph files are stored
       default_channels = ["L","R"],                 // Which channels to display. Avoid javascript errors if loading just one channel per phone
       default_normalization = "dB",                 // Sets default graph normalization mode. Accepts "dB" or "Hz"
@@ -10,13 +10,13 @@ const init_phones = ["HTH67"],                      // Optional. Which graphs to
       alt_sticky_graph = true,                      // If active graphs overflows the viewport, does the graph scroll with the page or stick to the viewport?
       alt_animated = false,                         // Determines if new graphs are drawn with a 1-second animation, or appear instantly
       alt_header = false,                           // Display a configurable header at the top of the alt layout
-      alt_tutorial = false,                         // Display a configurable frequency response guide below the graph
-      site_url = 'graph.html',                      // URL of your graph "homepage"
+      alt_tutorial = true,                          // Display a configurable frequency response guide below the graph
+      site_url = './',                              // URL of your graph "homepage"
       share_url = true,                             // If true, enables shareable URLs
-      watermark_text = "CrinGraph",                 // Optional. Watermark appears behind graphs
-      watermark_image_url = "cringraph-logo.svg",   // Optional. If image file is in same directory as config, can be just the filename
-      page_title = "CrinGraph",                     // Optional. Appended to the page title if share URLs are enabled
-      page_description = "View and compare frequency response graphs for earphones",
+      watermark_text = "",                          // Optional. Watermark appears behind graphs
+      watermark_image_url = "",                     // Optional. If image file is in same directory as config, can be just the filename
+      page_title = "Shiori Graph Tool (CrinGraph)",   // Optional. Appended to the page title if share URLs are enabled
+      page_description = "View and compare frequency response graphs for earphones", // Optional. Appended to the page title if share URLs are enabled
       accessories = false,                          // If true, displays specified HTML at the bottom of the page. Configure further below
       externalLinksBar = true,                      // If true, displays row of pill-shaped links at the bottom of the page. Configure further below
       restricted = false,                           // Enables restricted mode. More restricted options below
@@ -24,7 +24,7 @@ const init_phones = ["HTH67"],                      // Optional. Which graphs to
       expandableOnly = false,                       // Prevents iframe interactions unless the user has expanded it. Accepts "true" or "false" OR a pixel value; if pixel value, that is used as the maximum width at which expandableOnly is used
       headerHeight = '0px',                         // Optional. If expandable=true, determines how much space to leave for the parent page header
       darkModeButton = true,                        // Adds a "Dark Mode" button the main toolbar to let users set preference
-      targetDashed = false,                         // If true, makes target curves dashed lines
+      targetDashed = true,                          // If true, makes target curves dashed lines
       targetColorCustom = false,                    // If false, targets appear as a random gray value. Can replace with a fixed color value to make all targets the specified color, e.g. "black"
       labelsPosition = "bottom-right",              // Up to four labels will be grouped in a specified corner. Accepts "top-left," bottom-left," "bottom-right," and "default"
       stickyLabels = true,                          // "Sticky" labels 
@@ -34,13 +34,14 @@ const init_phones = ["HTH67"],                      // Optional. Which graphs to
       extraEQEnabled = true,                        // Enable parametic eq function
       extraEQBands = 10,                            // Default EQ bands available
       extraEQBandsMax = 20,                         // Max EQ bands available
-      extraToneGeneratorEnabled = true;             // Enable tone generator function
+      extraToneGeneratorEnabled = true,             // Enable tone generator function
+      extraAudioPreviewEnabled = true;              // Enable audio preview function
 
 // Specify which targets to display
 const targets = [
-    { type:"Neutral",    files:["Diffuse Field","Etymotic","Free Field","Innerfidelity ID"] },
-    { type:"Reviewer",   files:["Antdroid","Bad Guy","Banbeucmas","Crinacle","Precogvision","Super Review"] },
-    { type:"Preference", files:["Harman","Rtings","Sonarworks"] }
+    { type:"Preference",    files:["Banbeucmas", "Shiori", "Sonarworks"] },
+    { type:"Reference",    files:["VDSF", "Sonarworks", "LMG 0.6", "IEF IEM","Diffuse Field","Harman IE 2016", "Harman IE 2019 v2"] },
+    { type:"Reviewer",   files:["Precog","Super Review", "Toranku", "Vamp898", "IEGems","Banbeucmas", "Rohsa A", "Rohsa B", "Rohsa C", "Rohsa D"] },
 ];
 
 
@@ -164,32 +165,12 @@ const linkSets = [
         label: "IEM graph databases",
         links: [
             {
-                name: "Audio Discourse",
-                url: "https://iems.audiodiscourse.com/"
-            },
-            {
-                name: "Bad Guy",
-                url: "https://hbb.squig.link/"
-            },
-            {
-                name: "Banbeucmas",
-                url: "https://banbeu.com/graph/tool/"
-            },
-            {
-                name: "HypetheSonics",
-                url: "https://www.hypethesonics.com/iemdbc/"
-            },
-            {
                 name: "In-Ear Fidelity",
                 url: "https://crinacle.com/graphs/iems/graphtool/"
             },
             {
                 name: "Precogvision",
                 url: "https://precog.squig.link/"
-            },
-            {
-                name: "Rikudou Goku",
-                url: "https://rg.squig.link/"
             },
             {
                 name: "Super* Review",
@@ -200,10 +181,6 @@ const linkSets = [
     {
         label: "Headphones",
         links: [
-            {
-                name: "Audio Discourse",
-                url: "https://headphones.audiodiscourse.com/"
-            },
             {
                 name: "In-Ear Fidelity",
                 url: "https://crinacle.com/graphs/headphones/graphtool/"
@@ -234,50 +211,50 @@ setupGraphAnalytics();
 
 
 // If alt_header is enabled, these are the items added to the header
-let headerLogoText = null,
-    headerLogoImgUrl = "cringraph-logo.svg",
-    headerLinks = [
-    {
-        name: "Sample",
-        url: "https://sample.com"
-    }
-];
+let headerLogoText = "Shiori Graph Tool",
+    headerLogoImgUrl = ""
+    // headerLinks = [
+    // {
+    //     name: "Reviews",
+    //     url: ""
+    // }]
+;
 
 
 let tutorialDefinitions = [
     {
         name: 'Sub bass',
         width: '20.1%',
-        description: 'Lorem ipsum.'
+        description: 'Rumble and physical impact of drum hits and bass section in an orchestra.'
     },
     {
         name: 'Mid bass',
         width: '19.2%',
-        description: 'Lorem ipsum.'
+        description: 'Body of the drum hits. Too much can make the sound muddy.'
     },
     {
         name: 'Lower midrange',
         width: '17.4%',
-        description: 'Lorem ipsum.'
+        description: 'Body of the vocal and instruments. A downward slope from bass to lower midrange can help create a sense of 3D depth. Too much 1kHz leads to nasally tone and closed-in vocal.'
     },
     {
         name: 'Upper midrange',
         width: "20%",
-        description: 'Lorem ipsum.'
+        description: 'Upper harmonic of vocal and instruments. For IEMs, there should be a boost in this region to compensate for the fact that they do not interact with outer ears. This boost increases the clarity, but too much can lead to harshness and shoutiness. A moderate ear-gain around 5db, centering at 2kHz can help create illusion that the vocal is in-front of rather than in your head.'
     },
     {
         name: 'Presence region',
         width: '6%',
-        description: 'Lorem ipsum.'
+        description: 'Initial impact of percussion instruments exist here. Too little energy in this region can make the sound soft and fuzzy. Too much energy here could lead to harshness.'
     },
     {
         name: 'Mid treble',
         width: '7.3%',
-        description: 'Lorem ipsum.'
+        description: 'Body of cymbals, hi-hats, chimes, and other high-pitched instruments. Right amount of energy here creates sparkles, meaning cymbals and hi-hats pop up from a dark background. Too much energy here leads to harshness.'
     },
     {
         name: 'Air',
         width: '10%',
-        description: 'Lorem ipsum.'
+        description: 'Control the decay, reverb of the sound, background vocal, and other far away background elements in a mix. Careful boost in this region can improve the perceived size of soundstage and micro details.'
     }
 ]

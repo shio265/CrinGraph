@@ -1,5 +1,4 @@
-
-Frequency	dB	Unweighted
+Frequency	dB
 19.5	60.6 
 19.8	60.7 
 20.1	60.7 
@@ -480,11 +479,3 @@ Frequency	dB	Unweighted
 19102	40.5
 19380	40.9
 20000	42.6
-overall dB	0.0 dB
-decay	Average
-averaging	No Smoothing
-source	Totally Made Up
-
-
-saved	--/-/--, --:-- AM
-peak	0.0Hz

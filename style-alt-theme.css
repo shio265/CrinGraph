@@ -1,8 +1,9 @@
 
 /* Primary color theme */
 :root {
-    --accent-color: #2664c8;
+    --accent-color: #ff2600;
     --accent-color-contrast: hsl(0, 0%, 55%);
+    --accent-color-contrast-more: hsl(0, 0%, 100%);
 
     --background-color: hsl(0, 0%, 96%);
     --background-color-contrast: hsl(0, 0%, 90%);
@@ -21,7 +22,7 @@
     --scrollbar-color: 255,255,255;
     --scrollbar-accent: 0,0,0;
 
-    --header-color: #2664c8;
+    --header-color: #ff2600;
     --header-links-color: #fff;
     --header-menu-icon-color: #fff;
 
@@ -32,6 +33,7 @@
 body.dark-mode {
     --accent-color: hsl(0, 0%, 100%);
     --accent-color-contrast: hsl(0, 0%, 50%);
+    --accent-color-contrast-more: hsl(0, 0%, 0%);
 
     --background-color: hsl(0, 0%, 6%);
     --background-color-contrast: hsl(0, 0%, 15%);
@@ -50,7 +52,7 @@ body.dark-mode {
     --scrollbar-color: 0,0,0;
     --scrollbar-accent: 255,255,255;
 
-    --header-color: #C82647;
+    --header-color: #ff2600;
     --header-links-color: #fff;
     --header-menu-icon-color: #fff;
 
