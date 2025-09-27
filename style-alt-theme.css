@@ -1,7 +1,7 @@
 
 /* Primary color theme */
 :root {
-    --accent-color: #ff2600;
+    --accent-color: #ff2929;
     --accent-color-contrast: hsl(0, 0%, 55%);
     --accent-color-contrast-more: hsl(0, 0%, 100%);
 
@@ -22,7 +22,7 @@
     --scrollbar-color: 255,255,255;
     --scrollbar-accent: 0,0,0;
 
-    --header-color: #ff2600;
+    --header-color: #ff2929;
     --header-links-color: #fff;
     --header-menu-icon-color: #fff;
 
@@ -52,7 +52,7 @@ body.dark-mode {
     --scrollbar-color: 0,0,0;
     --scrollbar-accent: 255,255,255;
 
-    --header-color: #ff2600;
+    --header-color: #ff2929;
     --header-links-color: #fff;
     --header-menu-icon-color: #fff;
 
