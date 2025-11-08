@@ -31,7 +31,7 @@
 }
 
 body.dark-mode {
-    --accent-color: hsl(0, 0%, 100%);
+    --accent-color: hsl(0, 0%, 82%);
     --accent-color-contrast: hsl(0, 0%, 50%);
     --accent-color-contrast-more: hsl(0, 0%, 0%);
 

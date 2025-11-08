@@ -1,11 +1,10 @@
 [
   {
     "name": "CCA",
-    "phones": [{ "name": "CRA" }, { "name": "CRA+", "file": ["CRA Plus"] }]
-  },
-  {
-    "name": "Commo",
-    "phones": [{ "name": "Immersive", "file": ["Immersive (ANC)"] }]
+    "phones": [
+      { "name": "CRA" }, 
+      { "name": "CRA+", "file": ["CRA Plus"] }
+    ]
   },
   {
     "name": "Moondrop",
@@ -14,7 +13,6 @@
       { "name": "Aria" },
       { "name": "Aria 2" },
       { "name": "Aria: Snow Edition", "file": ["Aria Snow Edition"] },
-      { "name": "Beautiful World" },
       { "name": "Blessing 2" },
       { "name": "Blessing 3" },
       { "name": "Block" },
@@ -23,8 +21,6 @@
       { "name": "Chu II DSP" },
       { "name": "Dark Saber" },
       { "name": "Golden Ages" },
-      { "name": "Harmon" },
-      { "name": "Kadenz" },
       { "name": "Kato" },
       { "name": "Kato Blue" },
       { "name": "KXXS" },
@@ -44,7 +40,6 @@
       { "name": "Rays" },
       { "name": "SSR" },
       { "name": "Ultrasonic" },
-      { "name": "Variations" },
       { "name": "Voyager" }
     ]
   },
@@ -75,10 +70,7 @@
       { "name": "Bunny" },
       { "name": "Bunny DSP" },
       { "name": "One" },
-      { "name": "One DSP" },
-      { "name": "Oxygen" },
-      { "name": "Oxygen S2" },
-      { "name": "Oxygen S3" }
+      { "name": "One DSP" }
     ]
   },
   {

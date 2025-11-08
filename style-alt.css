@@ -1009,6 +1009,26 @@ div.extra-panel div.settings-row > span > input {
     width: 90%;
 }
 
+/* Dark mode specific styles for Parametric EQ inputs and selects */
+body.dark-mode div.extra-panel > div.extra-eq > div.filters > div.filter > span > input,
+body.dark-mode div.extra-panel div.settings-row > span > input {
+    background-color: var(--accent-color);
+}
+
+body.dark-mode div.extra-panel > div.extra-eq > div.select-eq-phone > select,
+body.dark-mode div.extra-panel > div.extra-eq > div.filters > div.filter > span > select {
+    background-color: var(--accent-color);
+}
+
+body.dark-mode div.extra-panel > div.extra-eq > div.filters > div.filter > span > input:focus,
+body.dark-mode div.extra-panel div.settings-row > span > input:focus,
+body.dark-mode div.extra-panel > div.extra-eq > div.select-eq-phone > select:focus,
+body.dark-mode div.extra-panel > div.extra-eq > div.filters > div.filter > span > select:focus {
+    outline: none;
+    border-color: var(--accent-color);
+    box-shadow: 0 0 3px var(--accent-color);
+}
+
 div.extra-eq-overlay {
     position: fixed;
     top: 0;
@@ -1088,21 +1108,6 @@ div.extra-panel > div.extra-audio-preview .audio-controls button {
 div.extra-panel > div.extra-audio-preview .audio-controls button:disabled {
     opacity: 0.5;
     cursor: not-allowed;
-}
-
-div.extra-panel > div.extra-audio-preview .audio-controls button#disable-all-eq {
-    background-color: #f44336;
-    border-color: #d32f2f;
-}
-
-div.extra-panel > div.extra-audio-preview .audio-controls button#enable-all-eq {
-    background-color: #4caf50;
-    border-color: #388e3c;
-}
-
-div.extra-panel > div.extra-audio-preview .audio-controls button#remove-audio {
-    background-color: #d9534f;
-    border: 1px solid #d43f3a;
 }
 
 div.extra-panel > div.extra-audio-preview .audio-volume,
@@ -1228,7 +1233,7 @@ div.extra-panel > div.extra-audio-preview .audio-controls {
 div.extra-panel > div.extra-audio-preview .upload-audio {
     padding: 0.5em 1em;
     background-color: var(--accent-color);
-    border: 1px solid #ff2600;
+    border: 1px solid;
     border-radius: 4px;
     cursor: pointer;
     margin-bottom: 0.5em;
@@ -1273,47 +1278,6 @@ div.extra-panel > div.extra-eq div.filters-button button {
     line-height: 1em;
     text-transform: capitalize;
     white-space: nowrap;
-}
-
-/* Specific colors for Parametric EQ Buttons */
-div.extra-panel > div.extra-eq div.filters-button button.autoeq{
-    border: 1px solid #30e5fd!important;
-}
-
-div.extra-panel > div.extra-eq div.filters-button button.sort-filters{
-    border: 1px solid #00ffaa!important;
-}
-
-div.extra-panel > div.extra-eq div.filters-button button.add-filter{
-    border: 1px solid #4caf50!important;
-}
-
-div.extra-panel > div.extra-eq div.filters-button button.remove-filter{
-    border: 1px solid #f44336!important;
-}
-
-div.extra-panel > div.extra-eq div.filters-button button.export-filters{
-    border: 1px solid #ff9800!important;
-}
-
-div.extra-panel > div.extra-eq div.filters-button button.import-filters{
-    border: 1px solid #a464ff!important;
-}
-
-div.extra-panel > div.extra-eq div.filters-button button.export-filters{
-    border: 1px solid #ff9800!important;
-}
-
-div.extra-panel > div.extra-eq div.filters-button button.export-graphic-filters{
-    border: 1px solid #ff6600!important;
-}
-
-div.extra-panel > div.extra-eq div.filters-button button.export-poweramp{
-    border: 1px solid #fff200!important;
-}
-
-div.extra-panel > div.extra-eq div.filters-button button.readme{
-    border: 1px solid #ff0000!important;
 }
 
 div.extra-panel > div.extra-audio-preview .eq-visualization {
