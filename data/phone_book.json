@@ -1,5 +1,11 @@
 [
   {
+    "name": "7HZ",
+    "phones": [
+      { "name": "Zero 2"}
+    ]
+  },
+  {
     "name": "CCA",
     "phones": [
       { "name": "CRA" }, 

@@ -231,14 +231,6 @@ doc.html(`
                   <span id="current-time">00:00</span>
                   <span id="total-time">00:00</span>
                 </div>
-                <div class="eq-visualization">
-                  <canvas id="eq-canvas" width="300" height="150"></canvas>
-                  <div class="eq-info">
-                    <span>EQ Curve Visualization</span>
-                    <span id="eq-status" class="eq-status"></span>
-                    <button id="toggle-eq-viz">Show/Hide</button>
-                  </div>
-                </div>
               </div>
             </div>
             <div class="extra-tone-generator">
@@ -632,11 +624,25 @@ labelButton.on("click", () => (labelsShown?clearLabels:drawLabels)());
 function saveGraph(ext) {
     let fn = {png:saveSvgAsPng, svg:saveSvg}[ext];
     let showControls = s => dB.all.attr("visibility",s?null:"hidden");
+    
+    // Explicitly inline CSS variables so the exported SVG retains the current theme
+    let computed = getComputedStyle(document.body);
+    let vars = ['--background-color-graph', '--font-color-primary', '--background-color-contrast-more'];
+    let inlineVars = vars.map(v => `${v}: ${computed.getPropertyValue(v).trim()}`).join("; ");
+    let oldStyle = gr.node().getAttribute("style") || "";
+    gr.node().setAttribute("style", oldStyle + (oldStyle && !oldStyle.endsWith(";") ? ";" : "") + inlineVars);
+    
+    let bg = computed.getPropertyValue('--background-color-graph').trim() || "white";
+
     gpath.selectAll("path").classed("highlight",false);
     drawLabels();
     showControls(false);
-    fn(gr.node(), "graph."+ext, {scale:3})
-        .then(()=>showControls(true));
+    fn(gr.node(), "graph."+ext, {scale:3, backgroundColor: bg})
+        .then(()=>{
+            showControls(true);
+            if (oldStyle) { gr.node().setAttribute("style", oldStyle); }
+            else { gr.node().removeAttribute("style"); }
+        });
     
     // Analytics event
     if (analyticsEnabled) { pushEventTag("clicked_download", targetWindow); }
@@ -3608,14 +3614,16 @@ function addExtra() {
     });
     
     // EQ Visualization toggle
-    toggleEQVizButton.addEventListener("click", () => {
-        isEQVizVisible = !isEQVizVisible;
-        eqCanvas.style.display = isEQVizVisible ? "block" : "none";
-        toggleEQVizButton.textContent = isEQVizVisible ? "Hide" : "Show";
-        if (isEQVizVisible) {
-            drawEQCurve();
-        }
-    });
+    if (toggleEQVizButton) {
+        toggleEQVizButton.addEventListener("click", () => {
+            isEQVizVisible = !isEQVizVisible;
+            eqCanvas.style.display = isEQVizVisible ? "block" : "none";
+            toggleEQVizButton.textContent = isEQVizVisible ? "Hide" : "Show";
+            if (isEQVizVisible) {
+                drawEQCurve();
+            }
+        });
+    }
     
     // Update EQ visualization when filters change
     let originalApplyEQ = applyEQ;

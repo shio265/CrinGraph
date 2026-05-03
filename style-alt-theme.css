@@ -1,7 +1,7 @@
 
 /* Primary color theme */
 :root {
-    --accent-color: #ff2929;
+    --accent-color: hsl(200, 100%, 40%);
     --accent-color-contrast: hsl(0, 0%, 55%);
     --accent-color-contrast-more: hsl(0, 0%, 100%);
 
@@ -22,17 +22,20 @@
     --scrollbar-color: 255,255,255;
     --scrollbar-accent: 0,0,0;
 
-    --header-color: #ff2929;
-    --header-links-color: #fff;
-    --header-menu-icon-color: #fff;
+    --header-color: hsl(0, 0%, 0%);
+    --header-links-color: hsl(0, 0%, 100%);
+    --header-menu-icon-color: hsl(0, 0%, 100%);
 
-    --logo-filter: none;
+    --logo-filter: invert(1.0);
     --svg-filter: none;
 }
 
-body.dark-mode {
+body.dark-mode,
+body.theme-dark,
+svg.dark-mode {
     --accent-color: hsl(0, 0%, 82%);
     --accent-color-contrast: hsl(0, 0%, 50%);
+    --accent-color-contrast-more: hsl(0, 0%, 0%);
     --accent-color-contrast-more: hsl(0, 0%, 0%);
 
     --background-color: hsl(0, 0%, 6%);
@@ -52,10 +55,10 @@ body.dark-mode {
     --scrollbar-color: 0,0,0;
     --scrollbar-accent: 255,255,255;
 
-    --header-color: #ff2929;
-    --header-links-color: #fff;
-    --header-menu-icon-color: #fff;
+    --header-color: hsl(0, 0%, 0%);
+    --header-links-color: hsl(0, 0%, 100%);
+    --header-menu-icon-color: hsl(0, 0%, 100%);
 
-    --logo-filter: none;
-    --svg-filter: none;
+    --logo-filter: invert(1.0);
+    --svg-filter: invert(1);
 }
