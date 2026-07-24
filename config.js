@@ -39,7 +39,7 @@ const init_phones = [""],                           // Optional. Which graphs to
 
 // Specify which targets to display
 const targets = [
-    { type:"Preference",    files:["Banbeucmas", "Shiori", "Shiori v2", "Rohsa C", "Rohsa D"] },
+    { type:"Preference",    files:["Banbeucmas", "Shiori", "Rohsa C", "Rohsa D"] },
     { type:"Reference",    files:["VDSF", "Sonarworks", "LMG 0.6", "IEF IEM","Diffuse Field","Harman IE 2016", "Harman IE 2019 v2"] },
     { type:"Reviewer",   files:["Precog","Super Review", "Toranku", "Vamp898", "IEGems","Banbeucmas", "Rohsa A", "Rohsa B", "Rohsa C", "Rohsa D"] },
 ];

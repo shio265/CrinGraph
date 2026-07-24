@@ -983,6 +983,11 @@ div.extra-panel div.settings-row {
     margin: 0 0 0.4em 0;
 }
 
+div.extra-panel > div.extra-eq > div.filters {
+    display: grid;
+    row-gap: 4px;
+}
+
 div.extra-panel > div.extra-eq > div.select-eq-phone > select {
     box-sizing: border-box;
     width: 100%;
@@ -997,11 +1002,23 @@ div.extra-panel > div.extra-eq > div.select-eq-phone > select {
 
 div.extra-panel > div.extra-eq > div.filters-header > span,
 div.extra-panel > div.extra-eq > div.filters > div.filter > span {
-    width: 24%;
-    display: inline-flex;
+    min-width: 0;
+    display: flex;
     align-items: center;
     font-size: 11px;
     line-height: 1em;
+}
+
+div.extra-panel > div.extra-eq > div.filters-header,
+div.extra-panel > div.extra-eq > div.filters > div.filter {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    column-gap: 4px;
+    align-items: center;
+}
+
+div.extra-panel > div.extra-eq > div.filters > div.filter > span {
+    height: 25px;
 }
 
 div.extra-panel > div.extra-eq > div.filters > div.filter > span > input[type='checkbox'] {
@@ -1014,26 +1031,35 @@ div.extra-panel > div.extra-eq > div.filters > div.filter > span > input[type='c
 }
 
 div.extra-panel > div.extra-eq > div.filters > div.filter > span > select {
-    width: 70%;
-        background-color: transparent;
-        border: none;
-        border-radius: 0;
-        padding: 5px 18px 5px 0;
+    box-sizing: border-box;
+    flex: 1 1 auto;
+    min-width: 0;
+    height: 100%;
+    display: block;
+    align-self: center;
+    margin: 0;
+    transform: translateY(2px);
+    background-color: var(--background-color-inputs);
+    border: 1px solid var(--background-color-contrast);
+    border-radius: 6px;
+    padding: 0 18px 0 6px;
+    color: var(--font-color-inputs);
     font-family: var(--font-primary);
     font-size: 12px;
-        -webkit-appearance: none;
-        -moz-appearance: none;
-        appearance: none;
-        background-image:
-            linear-gradient(45deg, transparent 50%, var(--background-color-contrast-more) 50%),
-            linear-gradient(135deg, var(--background-color-contrast-more) 50%, transparent 50%);
-        background-position:
-            calc(100% - 8px) calc(50% - 2px),
-            calc(100% - 3px) calc(50% - 2px);
-        background-size:
-            5px 5px,
-            5px 5px;
-        background-repeat: no-repeat;
+    line-height: 25px;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+    background-image:
+        linear-gradient(45deg, transparent 50%, var(--background-color-contrast-more) 50%),
+        linear-gradient(135deg, var(--background-color-contrast-more) 50%, transparent 50%);
+    background-position:
+        calc(100% - 8px) calc(50% - 2px),
+        calc(100% - 3px) calc(50% - 2px);
+    background-size:
+        5px 5px,
+        5px 5px;
+    background-repeat: no-repeat;
 }
 
 div.settings-row {
@@ -1054,7 +1080,9 @@ div.extra-panel div.settings-row > span:nth-child(1) {
 }
 
 div.extra-panel > div.extra-eq > div.filters > div.filter > span > input[type='checkbox'] {
-    width: 20%;
+    flex: 0 0 16px;
+    width: 16px;
+    height: 16px;
     margin: 0 6px 0 0;
     -webkit-appearance: checkbox;
     appearance: checkbox;
@@ -1073,6 +1101,11 @@ div.extra-panel div.settings-row > span > input {
     color: var(--font-color-inputs);
     font-family: var(--font-primary);
     font-size: 12px;
+}
+
+div.extra-panel > div.extra-eq > div.filters > div.filter > span > input:not([type='checkbox']) {
+    height: 25px;
+    line-height: 15px;
 }
 
 div.extra-panel > div.extra-eq > div.filters > div.filter > span:nth-child(2),
@@ -1313,20 +1346,18 @@ div.extra-panel > div.extra-audio-preview .audio-time-display {
     gap: 0.5em;
 }
 
-div.extra-panel > div.extra-audio-preview .audio-volume input[type="range"],
-div.extra-panel > div.extra-audio-preview .audio-progress-section input[type="range"] {
+div.extra-panel input[type="range"] {
     flex: 1;
     margin: 0;
     -webkit-appearance: none;
     appearance: none;
     height: 6px;
-    border-radius: 3px;
+    border-radius: 999px;
     background: linear-gradient(to right, var(--accent-color) 0%, var(--accent-color) var(--range-percent, 50%), var(--background-color-contrast) var(--range-percent, 50%), var(--background-color-contrast) 100%);
     outline: none;
 }
 
-div.extra-panel > div.extra-audio-preview .audio-volume input[type="range"]::-webkit-slider-thumb,
-div.extra-panel > div.extra-audio-preview .audio-progress-section input[type="range"]::-webkit-slider-thumb {
+div.extra-panel input[type="range"]::-webkit-slider-thumb {
     -webkit-appearance: none;
     appearance: none;
     height: 16px;
@@ -1338,8 +1369,7 @@ div.extra-panel > div.extra-audio-preview .audio-progress-section input[type="ra
     cursor: pointer;
 }
 
-div.extra-panel > div.extra-audio-preview .audio-volume input[type="range"]::-moz-range-thumb,
-div.extra-panel > div.extra-audio-preview .audio-progress-section input[type="range"]::-moz-range-thumb {
+div.extra-panel input[type="range"]::-moz-range-thumb {
     height: 16px;
     width: 16px;
     border-radius: 50%;
@@ -1349,8 +1379,7 @@ div.extra-panel > div.extra-audio-preview .audio-progress-section input[type="ra
     cursor: pointer;
 }
 
-div.extra-panel > div.extra-audio-preview .audio-volume input[type="range"]::-ms-thumb,
-div.extra-panel > div.extra-audio-preview .audio-progress-section input[type="range"]::-ms-thumb {
+div.extra-panel input[type="range"]::-ms-thumb {
     height: 16px;
     width: 16px;
     border-radius: 50%;
@@ -1361,27 +1390,24 @@ div.extra-panel > div.extra-audio-preview .audio-progress-section input[type="ra
     transition: all 0.2s ease;
 }
 
-div.extra-panel > div.extra-audio-preview .audio-volume input[type="range"]::-moz-range-track,
-div.extra-panel > div.extra-audio-preview .audio-progress-section input[type="range"]::-moz-range-track {
+div.extra-panel input[type="range"]::-moz-range-track {
     height: 6px;
-    border-radius: 3px;
+    border-radius: 999px;
     background: var(--background-color-contrast);
     border: none;
 }
 
-div.extra-panel > div.extra-audio-preview .audio-volume input[type="range"]::-ms-track,
-div.extra-panel > div.extra-audio-preview .audio-progress-section input[type="range"]::-ms-track {
+div.extra-panel input[type="range"]::-ms-track {
     height: 6px;
-    border-radius: 3px;
+    border-radius: 999px;
     background: var(--background-color-contrast);
     border: none;
     color: transparent;
 }
 
-div.extra-panel > div.extra-audio-preview .audio-volume input[type="range"]::-ms-fill-lower,
-div.extra-panel > div.extra-audio-preview .audio-progress-section input[type="range"]::-ms-fill-lower {
+div.extra-panel input[type="range"]::-ms-fill-lower {
     background: var(--accent-color);
-    border-radius: 3px;
+    border-radius: 999px;
 }
 
 div.extra-panel > div.extra-audio-preview .audio-progress-section {
@@ -1454,6 +1480,117 @@ div.extra-panel button.export-poweramp,
 div.extra-panel button.export-graphic-filters {
     position: relative;
     flex: calc(50% - 2px) 0 0;
+}
+
+div.extra-panel button.export-graphic-filters {
+    flex: 100% 0 0;
+}
+
+div.convolution-eq {
+    display: grid;
+    gap: 8px;
+    margin: 10px 0 0 0;
+}
+
+div.convolution-eq-info,
+h5.convolution-eq-info {
+    margin: 12px 0 8px 0;
+    font-size: 14px;
+    line-height: 1em;
+    color: var(--accent-color-contrast);
+}
+
+div.convolution-eq-selects {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 6px;
+}
+
+div.convolution-eq-selects label,
+label.convolution-eq-slider {
+    display: grid;
+    gap: 4px;
+    color: var(--background-color-contrast-more);
+    font-size: 11px;
+}
+
+div.convolution-eq-selects select,
+label.convolution-eq-slider > input[type='number'] {
+    box-sizing: border-box;
+    width: 100%;
+    height: 28px;
+    padding: 4px 8px;
+    background-color: var(--background-color-inputs);
+    border: 1px solid var(--background-color-contrast);
+    border-radius: 4px;
+    color: var(--font-color-inputs);
+    font-family: var(--font-primary);
+    font-size: 12px;
+}
+
+label.convolution-eq-slider {
+    grid-template-columns: minmax(0, 1fr) 64px;
+    align-items: center;
+}
+
+label.convolution-eq-slider > span {
+    grid-column: 1 / -1;
+}
+
+div.convolution-eq-actions {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+}
+
+label.convolution-eq-mode {
+    display: grid;
+    gap: 4px;
+    flex: 1 1 auto;
+    color: var(--background-color-contrast-more);
+    font-size: 11px;
+}
+
+label.convolution-eq-mode > select {
+    box-sizing: border-box;
+    width: 100%;
+    height: 28px;
+    padding: 4px 8px;
+    background-color: var(--background-color-inputs);
+    border: 1px solid var(--background-color-contrast);
+    border-radius: 4px;
+    color: var(--font-color-inputs);
+    font-family: var(--font-primary);
+    font-size: 12px;
+}
+
+div.convolution-eq-actions label {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex: auto 1 1;
+    color: var(--background-color-contrast-more);
+    font-size: 12px;
+}
+
+div.convolution-eq-actions input[type='checkbox'] {
+    width: 16px;
+    height: 16px;
+    margin: 0;
+    accent-color: var(--accent-color);
+}
+
+div.extra-panel button.export-convolution {
+    flex: 0 0 auto;
+    width: 100%;
+    margin-bottom: 0 !important;
+}
+
+body.dark-mode div.convolution-eq-selects select,
+body.dark-mode label.convolution-eq-slider > input[type='number'] {
+    background-color: var(--accent-color);
+    color: var(--font-color-secondary);
 }
 
 

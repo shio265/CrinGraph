@@ -212,6 +212,226 @@ Equalizer = (function() {
         return resultFR;
     };
 
+    let next_power_of_two = function (value) {
+        value = Math.max(2, Math.ceil(value));
+        let power = 1;
+        while (power < value) {
+            power *= 2;
+        }
+        return power;
+    };
+
+    let fft = function (real, imag, inverse) {
+        let n = real.length;
+        for (let i = 1, j = 0; i < n; ++i) {
+            let bit = n >> 1;
+            for (; j & bit; bit >>= 1) {
+                j ^= bit;
+            }
+            j ^= bit;
+            if (i < j) {
+                let realTemp = real[i];
+                let imagTemp = imag[i];
+                real[i] = real[j];
+                imag[i] = imag[j];
+                real[j] = realTemp;
+                imag[j] = imagTemp;
+            }
+        }
+        for (let length = 2; length <= n; length <<= 1) {
+            let halfLength = length >> 1;
+            let angle = (inverse ? 2 : -2) * Math.PI / length;
+            let wLengthReal = Math.cos(angle);
+            let wLengthImag = Math.sin(angle);
+            for (let i = 0; i < n; i += length) {
+                let wReal = 1;
+                let wImag = 0;
+                for (let j = 0; j < halfLength; ++j) {
+                    let evenIndex = i + j;
+                    let oddIndex = evenIndex + halfLength;
+                    let oddReal = real[oddIndex] * wReal - imag[oddIndex] * wImag;
+                    let oddImag = real[oddIndex] * wImag + imag[oddIndex] * wReal;
+                    real[oddIndex] = real[evenIndex] - oddReal;
+                    imag[oddIndex] = imag[evenIndex] - oddImag;
+                    real[evenIndex] += oddReal;
+                    imag[evenIndex] += oddImag;
+                    let nextWReal = wReal * wLengthReal - wImag * wLengthImag;
+                    wImag = wReal * wLengthImag + wImag * wLengthReal;
+                    wReal = nextWReal;
+                }
+            }
+        }
+        if (inverse) {
+            for (let i = 0; i < n; ++i) {
+                real[i] /= n;
+                imag[i] /= n;
+            }
+        }
+    };
+
+    let build_convolution_magnitudes = function (filters, sampleRate, freqResolution, phase, preamp) {
+        let resolution = Math.max(1, freqResolution || 16);
+        if (phase === "minimum") {
+            resolution /= 2;
+        }
+        let fftSize = next_power_of_two(sampleRate / resolution);
+        let halfSize = fftSize >> 1;
+        let freqs = new Array(halfSize);
+        for (let i = 0; i < halfSize; ++i) {
+            freqs[i] = i * sampleRate / fftSize;
+        }
+        let coeffs = filters_to_coeffs(filters, sampleRate);
+        let gains = coeffs.length ? calc_gains(freqs, coeffs, sampleRate) : new Array(halfSize).fill(0);
+        let maxGain = gains.reduce((max, gain) => Number.isFinite(gain) ? Math.max(max, gain) : max, -Infinity);
+        maxGain = Number.isFinite(maxGain) ? maxGain : 0;
+        let magnitudes = new Float64Array(halfSize + 1);
+        let lastGain = gains.find(gain => Number.isFinite(gain)) || 0;
+        for (let i = 0; i < halfSize; ++i) {
+            let gain = Number.isFinite(gains[i]) ? gains[i] : lastGain;
+            lastGain = gain;
+            magnitudes[i] = Math.pow(10, (gain - maxGain - 0.2 + preamp) / 20);
+        }
+        magnitudes[halfSize] = 0;
+        return { magnitudes, fftSize };
+    };
+
+    let spectrum_from_magnitudes = function (magnitudes, fftSize, logarithmic) {
+        let real = new Float64Array(fftSize);
+        let imag = new Float64Array(fftSize);
+        let halfSize = fftSize >> 1;
+        real[0] = logarithmic ? Math.log(Math.max(magnitudes[0], 1e-12)) : magnitudes[0];
+        for (let i = 1; i < halfSize; ++i) {
+            let value = logarithmic ? Math.log(Math.max(magnitudes[i], 1e-12)) : magnitudes[i];
+            real[i] = value;
+            real[fftSize - i] = value;
+        }
+        real[halfSize] = logarithmic ? Math.log(Math.max(magnitudes[halfSize], 1e-12)) : magnitudes[halfSize];
+        return { real, imag };
+    };
+
+    let normalize_impulse = function (impulse) {
+        let maxValue = impulse.reduce((max, value) => Math.max(max, Math.abs(value)), 0);
+        if (maxValue > 0.999) {
+            let scale = 0.999 / maxValue;
+            for (let i = 0; i < impulse.length; ++i) {
+                impulse[i] *= scale;
+            }
+        }
+        return impulse;
+    };
+
+    let linear_phase_impulse_response = function (filters, options) {
+        let sampleRate = options.sampleRate || config.DefaultSampleRate;
+        let { magnitudes, fftSize } = build_convolution_magnitudes(
+            filters, sampleRate, options.freqResolution, "linear", options.preamp || 0);
+        let { real, imag } = spectrum_from_magnitudes(magnitudes, fftSize, false);
+        let halfSize = fftSize >> 1;
+        let impulse = new Float32Array(fftSize);
+        fft(real, imag, true);
+        for (let i = 0; i < fftSize; ++i) {
+            let window = 0.54 - 0.46 * Math.cos(2 * Math.PI * i / (fftSize - 1));
+            impulse[i] = real[(i + halfSize) % fftSize] * window;
+        }
+        return normalize_impulse(impulse);
+    };
+
+    let minimum_phase_impulse_response = function (filters, options) {
+        let sampleRate = options.sampleRate || config.DefaultSampleRate;
+        let { magnitudes, fftSize } = build_convolution_magnitudes(
+            filters, sampleRate, options.freqResolution, "minimum", options.preamp || 0);
+        let { real, imag } = spectrum_from_magnitudes(magnitudes, fftSize, true);
+        let halfSize = fftSize >> 1;
+        fft(real, imag, true);
+        for (let i = 1; i < halfSize; ++i) {
+            real[i] *= 2;
+            imag[i] *= 2;
+        }
+        for (let i = halfSize + 1; i < fftSize; ++i) {
+            real[i] = 0;
+            imag[i] = 0;
+        }
+        fft(real, imag, false);
+        for (let i = 0; i < fftSize; ++i) {
+            let magnitude = Math.exp(real[i]);
+            let phase = imag[i];
+            real[i] = magnitude * Math.cos(phase);
+            imag[i] = magnitude * Math.sin(phase);
+        }
+        fft(real, imag, true);
+        return normalize_impulse(new Float32Array(real.slice(0, halfSize)));
+    };
+
+    let convolution_impulse_response = function (filters, options) {
+        options = options || {};
+        return options.phase === "linear" ?
+            linear_phase_impulse_response(filters, options) :
+            minimum_phase_impulse_response(filters, options);
+    };
+
+    let write_string = function (view, offset, string) {
+        for (let i = 0; i < string.length; ++i) {
+            view.setUint8(offset + i, string.charCodeAt(i));
+        }
+    };
+
+    let encode_wav = function (samples, options) {
+        let sampleRate = options.sampleRate || config.DefaultSampleRate;
+        let stereo = !!options.stereo;
+        let channels = stereo ? 2 : 1;
+        let bitDepth = options.bitDepth || "16";
+        let floatFormat = bitDepth === "float32";
+        let bitsPerSample = floatFormat ? 32 : parseInt(bitDepth);
+        let bytesPerSample = bitsPerSample / 8;
+        let blockAlign = channels * bytesPerSample;
+        let dataSize = samples.length * blockAlign;
+        let buffer = new ArrayBuffer(44 + dataSize);
+        let view = new DataView(buffer);
+        let offset = 0;
+        write_string(view, offset, "RIFF"); offset += 4;
+        view.setUint32(offset, 36 + dataSize, true); offset += 4;
+        write_string(view, offset, "WAVE"); offset += 4;
+        write_string(view, offset, "fmt "); offset += 4;
+        view.setUint32(offset, 16, true); offset += 4;
+        view.setUint16(offset, floatFormat ? 3 : 1, true); offset += 2;
+        view.setUint16(offset, channels, true); offset += 2;
+        view.setUint32(offset, sampleRate, true); offset += 4;
+        view.setUint32(offset, sampleRate * blockAlign, true); offset += 4;
+        view.setUint16(offset, blockAlign, true); offset += 2;
+        view.setUint16(offset, bitsPerSample, true); offset += 2;
+        write_string(view, offset, "data"); offset += 4;
+        view.setUint32(offset, dataSize, true); offset += 4;
+        let writeSample = function (sample) {
+            sample = Math.max(-1, Math.min(1, sample));
+            if (floatFormat) {
+                view.setFloat32(offset, sample, true);
+                offset += 4;
+            } else if (bitsPerSample === 16) {
+                view.setInt16(offset, Math.round(sample < 0 ? sample * 0x8000 : sample * 0x7fff), true);
+                offset += 2;
+            } else if (bitsPerSample === 24) {
+                let value = Math.round(sample < 0 ? sample * 0x800000 : sample * 0x7fffff);
+                view.setUint8(offset++, value & 0xff);
+                view.setUint8(offset++, (value >> 8) & 0xff);
+                view.setUint8(offset++, (value >> 16) & 0xff);
+            } else {
+                view.setInt32(offset, Math.round(sample < 0 ? sample * 0x80000000 : sample * 0x7fffffff), true);
+                offset += 4;
+            }
+        };
+        for (let i = 0; i < samples.length; ++i) {
+            for (let channel = 0; channel < channels; ++channel) {
+                writeSample(samples[i]);
+            }
+        }
+        return buffer;
+    };
+
+    let convolution_wav = function (filters, options) {
+        options = options || {};
+        let impulse = convolution_impulse_response(filters, options);
+        return encode_wav(impulse, options);
+    };
+
     let search_candidates = function (fr, frTarget, threshold) {
         let state = 0; // 1: peak, 0: matched, -1: dip
         let startIndex = -1;
@@ -417,6 +637,8 @@ Equalizer = (function() {
         calc_preamp,
         apply,
         as_graphic_eq,
+        convolution_impulse_response,
+        convolution_wav,
         autoeq
     }
 })();

@@ -193,9 +193,59 @@ doc.html(`
                 <button class="autoeq">AutoEQ</button>
                 <button class="import-filters">Import</button>
                 <button class="export-filters">Export</button>
-                <button class="export-poweramp">Export Poweramp</button>
                 <button class="export-graphic-filters">Export Wavelet</button>
                 <button class="readme">Guide</button>
+              </div>
+                            <div class="convolution-eq">
+                                <h5 class="convolution-eq-info">Convolution EQ</h5>
+                <div class="convolution-eq-selects">
+                  <label>
+                    <span>Sample rate</span>
+                    <select name="conv-sample-rate">
+                      <option value="44100">44100</option>
+                      <option value="48000" selected>48000</option>
+                      <option value="96000">96000</option>
+                      <option value="192000">192000</option>
+                      <option value="384000">384000</option>
+                    </select>
+                  </label>
+                  <label>
+                    <span>Bit depth</span>
+                    <select name="conv-bit-depth">
+                      <option value="16" selected>16 bit</option>
+                      <option value="24">24 bit</option>
+                      <option value="32">32 bit</option>
+                      <option value="float32">32 bit float</option>
+                    </select>
+                  </label>
+                  <label>
+                    <span>Phase</span>
+                    <select name="conv-phase">
+                      <option value="minimum" selected>minimum</option>
+                      <option value="linear">linear</option>
+                    </select>
+                  </label>
+                </div>
+                <label class="convolution-eq-slider">
+                  <span>Frequency resolution (Hz)</span>
+                  <input name="conv-freq-resolution" type="range" min="1" max="96" step="1" value="16"></input>
+                  <input name="conv-freq-resolution-value" type="number" min="1" max="96" step="1" value="16"></input>
+                </label>
+                <label class="convolution-eq-slider">
+                  <span>Preamp</span>
+                  <input name="conv-preamp" type="range" min="-30" max="12" step="0.1" value="0"></input>
+                  <input name="conv-preamp-value" type="number" min="-30" max="12" step="0.1" value="0"></input>
+                </label>
+                                <div class="convolution-eq-actions">
+                                    <label class="convolution-eq-mode">
+                                        <span>Channel mode</span>
+                                        <select name="conv-stereo">
+                                            <option value="true" selected>Stereo</option>
+                                            <option value="false">Mono</option>
+                                        </select>
+                                    </label>
+                                    <button class="export-convolution">Export Convolution</button>
+                                </div>
               </div>
               <a style="display: none" id="file-filters-export"></a>
               <form style="display:none"><input type="file" id="file-filters-import" accept=".txt" /></form>
@@ -2609,7 +2659,7 @@ function addExtra() {
         let phoneSelected = eqPhoneSelect.value;
         let phoneObj = phoneSelected && activePhones.filter(
             p => p.fullName == phoneSelected && p.eq)[0];
-        let filters = elemToFilters(true);
+        let filters = elemToFilters(true).filter(f => f.freq);
         if (!phoneObj || !filters.length) {
             alert("Please select model and add atleast one filter before export.");
             return;
@@ -2635,121 +2685,7 @@ function addExtra() {
         exportElem.download = phoneObj.fullName.replace(/^Uploaded /, "") + " Filters.txt";
         exportElem.click();
     });
-    
-    // Export filters for Poweramp EQ
-    document.querySelector("div.extra-eq button.export-poweramp").addEventListener("click", () => {
-        let phoneSelected = eqPhoneSelect.value;
-        let phoneObj = phoneSelected && activePhones.filter(
-            p => p.fullName == phoneSelected && p.eq)[0];
-        let filters = elemToFilters(true);
-        if (!phoneObj || !filters.length) {
-            alert("Please select model and add atleast one filter before export.");
-            return;
-        }
-        
-        // Count active filters and warn if more than 10
-        const activeFilters = filters.filter(f => !f.disabled && f.freq && f.q && f.gain !== 0);
-        if (activeFilters.length > 10) {
-            const userConfirm = confirm(
-                `You have ${activeFilters.length} active filters, but Poweramp only supports 10-band graphic EQ.\n\n` +
-                "The export will automatically calculate the combined effect of all your filters " +
-                "and apply them to Poweramp's 10 fixed frequency bands:\n" +
-                "31Hz, 62Hz, 125Hz, 250Hz, 500Hz, 1kHz, 2kHz, 4kHz, 8kHz, 16kHz\n\n" +
-                "Do you want to continue?"
-            );
-            if (!userConfirm) {
-                return;
-            }
-        }
-        
-        // Calculate preamp
-        let preamp = Equalizer.calc_preamp(
-            phoneObj.rawChannels.filter(c => c)[0],
-            phoneObj.eq.rawChannels.filter(c => c)[0]);
-        
-        // Define Poweramp's 10-band graphic EQ frequencies
-        const powerampFreqs = [31, 62, 125, 250, 500, 1000, 2000, 4000, 8000, 16000];
-        
-        // Calculate gains for each frequency band using current EQ
-        // This process automatically merges all parametric filters into 10 graphic EQ bands
-        // Each band gets the combined effect of all filters at that frequency
-        const coeffs = [];
-        filters.forEach(filter => {
-            if (!filter.disabled && filter.freq && filter.q && filter.gain !== 0) {
-                let coeff;
-                if (filter.type === 'PK') {
-                    coeff = Equalizer.peaking(filter.freq, filter.q, filter.gain);
-                } else if (filter.type === 'LSQ') {
-                    coeff = Equalizer.lowshelf(filter.freq, filter.q, filter.gain);
-                } else if (filter.type === 'HSQ') {
-                    coeff = Equalizer.highshelf(filter.freq, filter.q, filter.gain);
-                }
-                if (coeff) {
-                    coeffs.push(coeff);
-                }
-            }
-        });
-        
-        let bandGains;
-        if (coeffs.length > 0) {
-            bandGains = Equalizer.calc_gains(powerampFreqs, coeffs);
-        } else {
-            bandGains = new Array(powerampFreqs.length).fill(0);
-        }
-        
-        // Create EQ name from Phone + Target
-        let eqName = phoneObj.fullName.replace(/^Uploaded /, "");
-        // Get target from activePhones
-        let targetObj = activePhones.filter(p => p.isTarget)[0];
-        if (targetObj && targetObj.fullName) {
-            eqName += "-" + targetObj.fullName.replace(/^Uploaded /, "");
-        }
-        
-        // Create Poweramp EQ format
-        const powerampEQ = [{
-            "name": eqName,
-            "preamp": -preamp,
-            "parametric": false,
-            "bands": []
-        }];
-        
-        // Add the 10 graphic EQ bands only
-        powerampFreqs.forEach((freq, i) => {
-            powerampEQ[0].bands.push({
-                "type": 2,
-                "channels": 0,
-                "frequency": freq,
-                "q": 0.0,
-                "gain": bandGains[i],
-                "color": 0
-            });
-        });
-        
-        // Export as JSON file
-        const jsonString = JSON.stringify(powerampEQ, null, '\t');
-        let exportElem = document.querySelector("#file-filters-export");
-        exportElem.href && URL.revokeObjectURL(exportElem.href);
-        exportElem.href = URL.createObjectURL(new Blob([jsonString], {type: 'application/json'}));
-        
-        // Create filename with format: Phone Name - Target Name
-        let filename = phoneObj.fullName.replace(/^Uploaded /, "");
-        
-        // Reuse targetObj for filename (already defined above)
-        console.log("Target object:", targetObj);
-        console.log("Active phones:", activePhones);
-        
-        if (targetObj && targetObj.fullName) {
-            filename += "-" + targetObj.fullName.replace(/^Uploaded /, "");
-            console.log("Added target to filename:", targetObj.fullName);
-        } else {
-            console.log("No target detected - using phone name only");
-        }
-        filename += ".json";
-        
-        exportElem.download = filename;
-        exportElem.click();
-    });
-    
+
     // Export filters as graphic eq (for wavelet)
     document.querySelector("div.extra-eq button.export-graphic-filters").addEventListener("click", () => {
         let phoneSelected = eqPhoneSelect.value;
@@ -2767,6 +2703,71 @@ function addExtra() {
         exportElem.href && URL.revokeObjectURL(exportElem.href);
         exportElem.href = URL.createObjectURL(new Blob([settings]));
         exportElem.download = phoneObj.fullName.replace(/^Uploaded /, "") + " Graphic Filters.txt";
+        exportElem.click();
+    });
+
+    let bindConvolutionInputs = (rangeSelector, valueSelector) => {
+        let rangeInput = document.querySelector(rangeSelector);
+        let valueInput = document.querySelector(valueSelector);
+        let updateRangeProgress = () => {
+            let min = parseFloat(rangeInput.min);
+            let max = parseFloat(rangeInput.max);
+            let value = parseFloat(rangeInput.value);
+            let percent = ((value - min) / (max - min)) * 100;
+            updateSliderProgress(rangeInput, percent);
+        };
+        let normalize = (input) => {
+            let min = parseFloat(input.min);
+            let max = parseFloat(input.max);
+            let step = parseFloat(input.step) || 1;
+            let decimals = (input.step.split(".")[1] || "").length;
+            let value = parseFloat(input.value);
+            value = Number.isFinite(value) ? Math.min(Math.max(value, min), max) : min;
+            return parseFloat((Math.round(value / step) * step).toFixed(decimals));
+        };
+        let sync = (from, to) => {
+            let value = normalize(from);
+            from.value = value;
+            to.value = value;
+            updateRangeProgress();
+        };
+        rangeInput.addEventListener("input", () => sync(rangeInput, valueInput));
+        valueInput.addEventListener("input", () => sync(valueInput, rangeInput));
+        sync(rangeInput, valueInput);
+        return () => normalize(valueInput);
+    };
+    let getConvolutionFreqResolution = bindConvolutionInputs(
+        "div.extra-eq input[name='conv-freq-resolution']",
+        "div.extra-eq input[name='conv-freq-resolution-value']");
+    let getConvolutionPreamp = bindConvolutionInputs(
+        "div.extra-eq input[name='conv-preamp']",
+        "div.extra-eq input[name='conv-preamp-value']");
+
+    document.querySelector("div.extra-eq button.export-convolution").addEventListener("click", () => {
+        let phoneSelected = eqPhoneSelect.value;
+        let phoneObj = phoneSelected && activePhones.filter(
+            p => p.fullName == phoneSelected && p.eq)[0] || { fullName: "Unnamed" };
+        let filters = elemToFilters();
+        if (!filters.length) {
+            alert("Please add atleast one filter before export.");
+            return;
+        }
+        let options = {
+            sampleRate: parseInt(document.querySelector("div.extra-eq select[name='conv-sample-rate']").value),
+            bitDepth: document.querySelector("div.extra-eq select[name='conv-bit-depth']").value,
+            phase: document.querySelector("div.extra-eq select[name='conv-phase']").value,
+            freqResolution: getConvolutionFreqResolution(),
+            preamp: getConvolutionPreamp(),
+            stereo: document.querySelector("div.extra-eq select[name='conv-stereo']").value === "true"
+        };
+        let exportElem = document.querySelector("#file-filters-export");
+        exportElem.href && URL.revokeObjectURL(exportElem.href);
+        exportElem.href = URL.createObjectURL(new Blob(
+            [Equalizer.convolution_wav(filters, options)], { type: "audio/wav" }));
+        let bitDepth = options.bitDepth === "float32" ? "32float" : options.bitDepth + "bit";
+        let filename = phoneObj.fullName.replace(/^Uploaded /, "") +
+            " Convolution " + options.phase + " " + options.sampleRate + "Hz " + bitDepth + ".wav";
+        exportElem.download = filename;
         exportElem.click();
     });
     // Readme
